@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { setDriverSessionId } from "@/lib/driver-session";
+import { findDriverIdForUser } from "@/lib/driver-auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -14,8 +15,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
-  console.log("SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-  console.log("SUPABASE_KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   const login = async () => {
     setError("");
     setLoading(true);
@@ -37,23 +36,19 @@ export default function LoginPage() {
       return;
     }
 
-    const { data: driver, error: driverError } = await supabase
-      .from("drivers")
-      .select("id")
-      .eq("email", data.session.user.email)
-      .maybeSingle();
+    const { driverId, error: driverError } = await findDriverIdForUser({
+      email: data.session.user.email,
+      metadata: data.session.user.user_metadata,
+    });
 
     if (driverError) {
-      setError(driverError.message);
+      setError(driverError);
       return;
     }
 
-    if (!driver) {
-      setError("ドライバー情報が見つかりません");
-      return;
-    }
+    if (!driverId) return;
 
-    setDriverSessionId(driver.id);
+    setDriverSessionId(driverId);
     router.push("/report");
   };
 

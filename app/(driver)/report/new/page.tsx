@@ -11,6 +11,7 @@ import Checkbox from "@/components/ui/Checkbox";
 import PageTitle from "@/components/ui/PageTitle";
 import PageActions from "@/components/ui/PageActions";
 import { getDriverSessionId, setDriverSessionId } from "@/lib/driver-session";
+import { findDriverIdForUser } from "@/lib/driver-auth";
 import {
   ClipboardPen,
   Package,
@@ -68,6 +69,7 @@ export default function ReportNewPage() {
   const [alcoholCheckFile, setAlcoholCheckFile] = useState<File | null>(null);
   const [alcoholCheckImageUrl, setAlcoholCheckImageUrl] = useState("");
   const [loading, setLoading] = useState(true);
+  const [driverError, setDriverError] = useState("");
 
   // -----------------------------
   // セッション取得
@@ -91,22 +93,17 @@ export default function ReportNewPage() {
         return;
       }
 
-      if (!session.user.email) {
-        setLoading(false);
-        return;
+      const { driverId: resolvedDriverId, error } = await findDriverIdForUser({
+        email: session.user.email,
+        metadata: session.user.user_metadata,
+      });
+
+      if (resolvedDriverId) {
+        setDriverSessionId(resolvedDriverId);
       }
 
-      const { data: driver } = await supabase
-        .from("drivers")
-        .select("id")
-        .eq("email", session.user.email)
-        .maybeSingle();
-
-      if (driver) {
-        setDriverSessionId(driver.id);
-      }
-
-      setDriverId(driver?.id ?? null);
+      setDriverError(error ?? "");
+      setDriverId(resolvedDriverId);
       setLoading(false);
     };
 
@@ -361,8 +358,19 @@ export default function ReportNewPage() {
 
   if (!driverId) {
     return (
-      <main className="p-4">
-        <p>ログイン情報がありません</p>
+      <main className="p-4 max-w-md mx-auto">
+        <div className="rounded-lg bg-white p-4 shadow space-y-3">
+          <PageTitle>日報入力</PageTitle>
+          <p className="text-sm text-gray-600">
+            ドライバー情報を取得できませんでした。
+          </p>
+          {driverError && (
+            <p className="text-sm text-red-500 whitespace-pre-wrap">
+              {driverError}
+            </p>
+          )}
+          <Button onClick={() => router.push("/login")}>ログインへ戻る</Button>
+        </div>
       </main>
     );
   }
