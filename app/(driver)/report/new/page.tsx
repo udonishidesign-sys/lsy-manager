@@ -63,24 +63,37 @@ export default function ReportNewPage() {
   const [checkVehicleInspection, setCheckVehicleInspection] = useState(false);
   const [checkInsurance, setCheckInsurance] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [vehicleCheck, setVehicleCheck] = useState(false);
   const [absenceReason, setAbsenceReason] = useState("");
   const [alcoholCheckTime, setAlcoholCheckTime] = useState("");
   const [alcoholCheckFile, setAlcoholCheckFile] = useState<File | null>(null);
   const [alcoholCheckImageUrl, setAlcoholCheckImageUrl] = useState("");
+  const [loading, setLoading] = useState(true);
 
   // -----------------------------
   // セッション取得
   // -----------------------------
   useEffect(() => {
-    const id = getDriverSessionId();
-    if (!id) {
-      router.push("/login");
-      return;
-    }
-    setDriverId(id);
+    const check = async () => {
+      const { data } = await supabase.auth.getSession();
+
+      if (!data.session) {
+        router.push("/login");
+        return;
+      }
+
+      setLoading(false);
+    };
+
+    check();
   }, [router]);
 
+  if (loading) {
+    return (
+      <main className="p-4 max-w-md mx-auto">
+        <p className="text-xs text-gray-400">読み込み中...</p>
+      </main>
+    );
+  }
   // -----------------------------
   // ドライバー情報取得（案件自動設定）
   // -----------------------------

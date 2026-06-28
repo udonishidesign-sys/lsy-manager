@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getDriverSessionId } from "@/lib/driver-session";
 import { formatYen } from "@/lib/drivers";
@@ -26,11 +27,13 @@ type Driver = {
 };
 
 export default function ReportHistoryPage() {
+  const router = useRouter();
   const [driverId, setDriverId] = useState<number | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [projects, setProjects] = useState<{ id: number; name: string }[]>([]);
   const [driverName, setDriverName] = useState("");
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDrivers = async () => {
@@ -71,19 +74,24 @@ export default function ReportHistoryPage() {
   }, []);
 
   useEffect(() => {
-    if (!driverId) return;
+    const check = async () => {
+      const { data } = await supabase.auth.getSession();
 
-    const driver = drivers.find((d) => d.id === driverId);
+      if (!data.session) {
+        router.push("/login");
+        return;
+      }
 
-    if (driver) {
-      setDriverName(driver.name);
-    }
-  }, [driverId, drivers]);
+      setLoading(false);
+    };
 
-  if (!driverId) {
+    check();
+  }, [router]);
+
+  if (loading) {
     return (
-      <main className="p-4">
-        <p>driverId がありません</p>
+      <main className="p-4 max-w-md mx-auto">
+        <p className="text-xs text-gray-400">読み込み中...</p>
       </main>
     );
   }
