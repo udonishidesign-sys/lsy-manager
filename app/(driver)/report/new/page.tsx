@@ -74,9 +74,11 @@ export default function ReportNewPage() {
   // -----------------------------
   useEffect(() => {
     const check = async () => {
-      const { data } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (!data.session) {
+      if (!session) {
         router.push("/login");
         return;
       }
