@@ -10,7 +10,7 @@ import Input from "@/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 import PageTitle from "@/components/ui/PageTitle";
 import PageActions from "@/components/ui/PageActions";
-import { getDriverSessionId, clearDriverSession } from "@/lib/driver-session";
+import { getDriverSessionId } from "@/lib/driver-session";
 import {
   ClipboardPen,
   Package,
@@ -83,20 +83,32 @@ export default function ReportNewPage() {
         return;
       }
 
-      setDriverId(session.user.id as any);
+      const savedDriverId = getDriverSessionId();
+
+      if (savedDriverId) {
+        setDriverId(savedDriverId);
+        setLoading(false);
+        return;
+      }
+
+      if (!session.user.email) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: driver } = await supabase
+        .from("drivers")
+        .select("id")
+        .eq("email", session.user.email)
+        .maybeSingle();
+
+      setDriverId(driver?.id ?? null);
       setLoading(false);
     };
 
     init();
-  }, []);
+  }, [router]);
 
-  if (loading) {
-    return (
-      <main className="p-4 max-w-md mx-auto">
-        <p className="text-xs text-gray-400">読み込み中...</p>
-      </main>
-    );
-  }
   // -----------------------------
   // ドライバー情報取得（案件自動設定）
   // -----------------------------
@@ -178,13 +190,6 @@ export default function ReportNewPage() {
 
     loadTodayReport();
   }, [driverId, date]);
-  // -----------------------------
-  // ドライバー切替
-  // -----------------------------
-  const switchDriver = () => {
-    clearDriverSession();
-    router.push("/login");
-  };
 
   // -----------------------------
   // 保存
@@ -341,6 +346,14 @@ export default function ReportNewPage() {
     Number(odometerEnd || 0) - Number(odometerStart || 0),
     0,
   );
+
+  if (loading) {
+    return (
+      <main className="p-4 max-w-md mx-auto">
+        <p className="text-xs text-gray-400">読み込み中...</p>
+      </main>
+    );
+  }
 
   if (!driverId) {
     return (
