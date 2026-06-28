@@ -77,7 +77,7 @@ export default function LoginPage() {
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        <Button onClick={login} disabled={loading} className="w-full">
+        <Button onClick={login} disabled={loading} className="w-full mt-4">
           {loading ? "ログイン中..." : "ログイン"}
         </Button>
       </div>
