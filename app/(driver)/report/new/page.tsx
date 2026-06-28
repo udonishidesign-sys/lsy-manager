@@ -76,34 +76,31 @@ export default function ReportNewPage() {
   // -----------------------------
   useEffect(() => {
     const init = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      setLoading(true);
 
-      if (!session) {
+      const { data } = await supabase.auth.getSession();
+
+      if (!data.session) {
         router.push("/login");
         return;
       }
 
       const savedDriverId = getDriverSessionId();
 
-      if (savedDriverId) {
+      if (!savedDriverId) {
+        const { driverId } = await findDriverIdForUser({
+          email: data.session.user.email,
+          metadata: data.session.user.user_metadata,
+        });
+
+        if (driverId) {
+          setDriverSessionId(driverId);
+          setDriverId(driverId);
+        }
+      } else {
         setDriverId(savedDriverId);
-        setLoading(false);
-        return;
       }
 
-      const { driverId: resolvedDriverId, error } = await findDriverIdForUser({
-        email: session.user.email,
-        metadata: session.user.user_metadata,
-      });
-
-      if (resolvedDriverId) {
-        setDriverSessionId(resolvedDriverId);
-      }
-
-      setDriverError(error ?? "");
-      setDriverId(resolvedDriverId);
       setLoading(false);
     };
 
