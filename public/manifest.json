@@ -3,7 +3,7 @@
   "short_name": "LSY日報管理",
   "start_url": "/login",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#0f172a",
   "theme_color": "#14b8a6",
   "icons": [
     {
