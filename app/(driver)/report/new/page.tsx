@@ -207,23 +207,14 @@ export default function ReportNewPage() {
       }
 
       const fileExt = alcoholCheckFile.name.split(".").pop() || "jpg";
-      const randomText = Math.random().toString(36).slice(2);
-      const fileName = `${Date.now()}-${randomText}.${fileExt}`;
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
       const filePath = `alcohol-checks/${driverId}/${date}/${fileName}`;
-      const [odometerEnd, setOdometerEnd] = useState("");
 
-      const { error: uploadError } = await supabase.storage
+      const { error } = await supabase.storage
         .from("report-files")
-        .upload(filePath, alcoholCheckFile, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: alcoholCheckFile.type || "image/jpeg",
-        });
+        .upload(filePath, alcoholCheckFile);
 
-      if (uploadError) {
-        console.error("uploadError:", uploadError);
-        throw uploadError;
-      }
+      if (error) throw error;
 
       const { data } = supabase.storage
         .from("report-files")
