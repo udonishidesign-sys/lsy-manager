@@ -73,7 +73,7 @@ export default function ReportNewPage() {
   // セッション取得
   // -----------------------------
   useEffect(() => {
-    const check = async () => {
+    const init = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -83,11 +83,12 @@ export default function ReportNewPage() {
         return;
       }
 
+      setDriverId(session.user.id as any);
       setLoading(false);
     };
 
-    check();
-  }, [router]);
+    init();
+  }, []);
 
   if (loading) {
     return (
