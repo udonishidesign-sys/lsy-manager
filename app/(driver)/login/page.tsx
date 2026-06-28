@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 
 export default function LoginPage() {
@@ -12,7 +13,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
-
+  console.log("SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+  console.log("SUPABASE_KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   const login = async () => {
     setError("");
     setLoading(true);
@@ -43,18 +45,19 @@ export default function LoginPage() {
         <h1 className="text-xl font-bold text-gray-500">ドライバーログイン</h1>
 
         {/* email */}
-        <input
-          className="border border-gray-300 p-2 w-full rounded text-gray-500"
-          placeholder="メールアドレス"
+        <Input
+          label="メールアドレス"
+          type="email"
+          placeholder="lsy.dirivers@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
         {/* password */}
-        <input
-          className="border border-gray-300 p-2 w-full rounded text-gray-500"
-          placeholder="パスワード"
+        <Input
+          label="パスワード"
           type="password"
+          placeholder="パスワード"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />

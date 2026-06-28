@@ -5,6 +5,7 @@ type Props = {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   suffix?: string;
   disabled?: boolean;
+  placeholder?: string;
 };
 
 export default function Input({
@@ -14,6 +15,7 @@ export default function Input({
   onChange,
   suffix,
   disabled,
+  placeholder,
 }: Props) {
   return (
     <label className="block">
@@ -23,6 +25,7 @@ export default function Input({
         <input
           type={type}
           value={value}
+          placeholder={placeholder}
           disabled={disabled}
           onChange={onChange}
           className={`
