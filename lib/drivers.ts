@@ -8,6 +8,10 @@ export type Driver = {
   vehicle_type?: string;
   plate_number?: string;
   created_at?: string;
+  workDays?: number;
+  absences?: number;
+  monthlySales?: number;
+  totalSales?: number;
 };
 export const DEFAULT_DRIVERS: Driver[] = [
   {

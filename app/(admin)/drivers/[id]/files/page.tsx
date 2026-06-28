@@ -166,10 +166,15 @@ export default function DriverFilesPage() {
             {loading ? "アップロード中..." : "保存"}
           </Button>
         </div>
-        <Button variant="secondary" onClick={() => deleteFile(f.id)}>
-          削除
-        </Button>
+        {files.map((f) => (
+          <div key={f.id}>
+            <span>{f.file_name}</span>
 
+            <Button variant="secondary" onClick={() => deleteFile(f.id)}>
+              削除
+            </Button>
+          </div>
+        ))}
         <Link href={`/drivers/${driverId}`} className="text-blue-500 text-sm">
           ← ドライバー詳細へ戻る
         </Link>
