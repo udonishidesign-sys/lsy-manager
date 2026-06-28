@@ -1,6 +1,6 @@
 {
   "name": "LSY Manager",
-  "short_name": "LSY",
+  "short_name": "LSY日報管理",
   "start_url": "/login",
   "display": "standalone",
   "background_color": "#ffffff",
