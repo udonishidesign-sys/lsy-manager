@@ -4,24 +4,28 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ClipboardPen, History, Upload, ChevronRight } from "lucide-react";
-import { getDriverSessionId } from "@/lib/driver-session";
+import { supabase } from "@/lib/supabase";
 
 export default function ReportHomePage() {
   const router = useRouter();
-  const [driverId, setDriverId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const id = getDriverSessionId();
+    const check = async () => {
+      const { data } = await supabase.auth.getSession();
 
-    if (!id) {
-      router.push("/login");
-      return;
-    }
+      if (!data.session) {
+        router.push("/login");
+        return;
+      }
 
-    setDriverId(id);
+      setLoading(false);
+    };
+
+    check();
   }, [router]);
 
-  if (!driverId) {
+  if (loading) {
     return (
       <main className="p-4 max-w-md mx-auto">
         <p className="text-xs text-gray-400">読み込み中...</p>
