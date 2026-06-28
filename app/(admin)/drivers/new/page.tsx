@@ -27,7 +27,7 @@ export default function NewDriverPage() {
   const [birthDate, setBirthDate] = useState("");
   const [vehicleType, setVehicleType] = useState("");
   const [plateNumber, setPlateNumber] = useState("");
-  const [status, setStatus] = useState("稼働中");
+  const [status] = useState("稼働中");
   const [loading, setLoading] = useState(false);
   const [projectStartDate, setProjectStartDate] = useState("");
   const [fileType, setFileType] = useState("license");
