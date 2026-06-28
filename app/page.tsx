@@ -8,7 +8,7 @@ export default function Page() {
   const router = useRouter();
 
   useEffect(() => {
-    const checkSession = async () => {
+    const check = async () => {
       const { data } = await supabase.auth.getSession();
 
       if (data.session) {
@@ -18,7 +18,22 @@ export default function Page() {
       }
     };
 
-    checkSession();
+    check();
+
+    // 重要：ログイン状態変化も監視
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session) {
+          router.replace("/report");
+        } else {
+          router.replace("/login");
+        }
+      },
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, [router]);
 
   return null;
