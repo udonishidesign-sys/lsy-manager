@@ -10,7 +10,7 @@ import Input from "@/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 import PageTitle from "@/components/ui/PageTitle";
 import PageActions from "@/components/ui/PageActions";
-import { getDriverSessionId } from "@/lib/driver-session";
+import { getDriverSessionId, setDriverSessionId } from "@/lib/driver-session";
 import {
   ClipboardPen,
   Package,
@@ -101,6 +101,10 @@ export default function ReportNewPage() {
         .select("id")
         .eq("email", session.user.email)
         .maybeSingle();
+
+      if (driver) {
+        setDriverSessionId(driver.id);
+      }
 
       setDriverId(driver?.id ?? null);
       setLoading(false);

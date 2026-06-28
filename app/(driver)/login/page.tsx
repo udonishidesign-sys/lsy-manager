@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import { setDriverSessionId } from "@/lib/driver-session";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -36,6 +37,23 @@ export default function LoginPage() {
       return;
     }
 
+    const { data: driver, error: driverError } = await supabase
+      .from("drivers")
+      .select("id")
+      .eq("email", data.session.user.email)
+      .maybeSingle();
+
+    if (driverError) {
+      setError(driverError.message);
+      return;
+    }
+
+    if (!driver) {
+      setError("ドライバー情報が見つかりません");
+      return;
+    }
+
+    setDriverSessionId(driver.id);
     router.push("/report");
   };
 
