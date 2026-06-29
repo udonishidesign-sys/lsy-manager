@@ -3,30 +3,28 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { getDriverSessionId } from "@/lib/driver-session";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const check = async () => {
-      const driverId = getDriverSessionId();
       const { data } = await supabase.auth.getSession();
 
-      if (!data.session && !driverId) {
+      if (!data.session) {
         router.replace("/login");
         return;
       }
 
-      setChecking(false);
+      setReady(true);
     };
 
     check();
   }, [router]);
 
-  if (checking) {
-    return <main className="p-4 text-gray-400 text-xs">読み込み中...</main>;
+  if (!ready) {
+    return <div className="p-4 text-gray-400 text-sm">読み込み中...</div>;
   }
 
   return <>{children}</>;

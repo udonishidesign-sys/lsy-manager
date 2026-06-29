@@ -1,37 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getDriverSessionId } from "@/lib/driver-session";
-import SplashScreen from "@/components/SplashScreen";
 
 export default function Page() {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const check = async () => {
-      // スプラッシュ最低表示時間（UX用）
-      const wait = new Promise((r) => setTimeout(r, 800));
+    const run = async () => {
+      // ① ローカル即判定（PWA対策）
+      const local = getDriverSessionId();
 
-      const localId = getDriverSessionId();
+      if (local) {
+        router.replace("/report");
+        return;
+      }
 
+      // ② Supabaseセッション（フォールバック）
       const { data } = await supabase.auth.getSession();
 
-      await wait;
-
-      if (localId || data.session) {
+      if (data.session) {
         router.replace("/report");
       } else {
         router.replace("/login");
       }
-
-      setReady(true);
     };
 
-    check();
+    run();
   }, [router]);
 
-  return <SplashScreen />;
+  return <main className="p-4 text-gray-400 text-sm">起動中...</main>;
 }
