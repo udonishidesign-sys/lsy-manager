@@ -8,12 +8,7 @@ import DriverName from "@/components/ui/DriverName";
 import { supabase } from "@/lib/supabase";
 import { getDriverSessionId } from "@/lib/driver-session";
 
-import {
-  House,
-  ClipboardPen,
-  Upload,
-  History,
-} from "lucide-react";
+import { House, ClipboardPen, Upload, History } from "lucide-react";
 
 const menu = [
   {
@@ -45,14 +40,16 @@ export default function DriverLayout({
 }) {
   const pathname = usePathname();
 
-  const [driverName, setDriverName] =
-    useState("");
+  const [driverName, setDriverName] = useState("");
 
   useEffect(() => {
     const loadDriver = async () => {
       const id = getDriverSessionId();
 
-      if (!id) return;
+      if (!id) {
+        setDriverName("");
+        return;
+      }
 
       const { data } = await supabase
         .from("drivers")
@@ -65,7 +62,17 @@ export default function DriverLayout({
       }
     };
 
+    // 初回マウント時（直接アクセス・リロード時など）
     loadDriver();
+
+    // ログイン画面から/reportへ移動した場合、このレイアウトは
+    // 再マウントされないため、ログイン完了時に飛んでくる
+    // カスタムイベントを受けて再取得する
+    window.addEventListener("driver-session-updated", loadDriver);
+
+    return () => {
+      window.removeEventListener("driver-session-updated", loadDriver);
+    };
   }, []);
 
   return (
@@ -73,12 +80,8 @@ export default function DriverLayout({
       <header className="bg-slate-700 max-w-md mx-auto text-white px-4 py-3">
         <div className="max-w-md mx-auto flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs text-slate-200">
-              ドライバー用
-            </p>
-            <p className="font-bold text-lg">
-              LSY 日報
-            </p>
+            <p className="text-xs text-slate-200">ドライバー用</p>
+            <p className="font-bold text-lg">LSY 日報</p>
           </div>
 
           <DriverName name={driverName} />
@@ -93,27 +96,21 @@ export default function DriverLayout({
             const Icon = item.icon;
 
             const active =
-  item.href === "/report"
-    ? pathname === "/report"
-    : pathname.startsWith(item.href);
+              item.href === "/report"
+                ? pathname === "/report"
+                : pathname.startsWith(item.href);
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center justify-center text-xs transition ${
-                  active
-                    ? "text-teal-600 font-semibold"
-                    : "text-slate-500"
+                  active ? "text-teal-600 font-semibold" : "text-slate-500"
                 }`}
               >
                 <Icon
                   size={20}
-                  className={
-                    active
-                      ? "text-teal-600"
-                      : "text-slate-500"
-                  }
+                  className={active ? "text-teal-600" : "text-slate-500"}
                 />
                 {item.label}
               </Link>

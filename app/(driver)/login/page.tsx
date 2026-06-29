@@ -50,6 +50,10 @@ export default function LoginPage() {
 
     setDriverSessionId(driverId);
 
+    // (driver)レイアウトは/loginから/reportへ移動しても再マウントされない
+    // ため、ログイン完了をレイアウト側に伝えてヘッダーの名前を更新させる
+    window.dispatchEvent(new CustomEvent("driver-session-updated"));
+
     // ★ここが重要
     await new Promise((r) => setTimeout(r, 100));
 
