@@ -1,51 +1,49 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
     let mounted = true;
 
-    const run = async () => {
-      // ① 初回セッション取得
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    const init = async () => {
+      const { data } = await supabase.auth.getSession();
 
       if (!mounted) return;
 
-      if (!session) {
-        router.replace("/login");
-        return;
-      }
-
-      setReady(true);
+      setSession(data.session);
+      setLoading(false);
     };
 
-    run();
+    init();
 
-    // ② 重要：状態変化監視（PWA対策の本体）
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        router.replace("/login");
-      } else {
-        setReady(true);
-      }
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setLoading(false);
+      },
+    );
 
     return () => {
       mounted = false;
-      data.subscription.unsubscribe();
+      listener.subscription.unsubscribe();
     };
-  }, [router]);
+  }, []);
 
-  if (!ready) {
-    return <div className="p-4 text-gray-400 text-sm">起動中...</div>;
+  // 👉 ここが重要：判定中は何もしない
+  if (loading) {
+    return <div className="p-4 text-sm text-gray-400">確認中...</div>;
+  }
+
+  // 👉 未ログインは表示だけ変える（redirectしない）
+  if (!session) {
+    return (
+      <div className="p-4 text-sm text-gray-400">ログインしてください</div>
+    );
   }
 
   return <>{children}</>;
