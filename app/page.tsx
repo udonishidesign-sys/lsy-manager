@@ -3,29 +3,24 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { getDriverSessionId } from "@/lib/driver-session";
+import { clearDriverSession } from "@/lib/driver-session";
 
 export default function Page() {
   const router = useRouter();
 
   useEffect(() => {
     const run = async () => {
-      // ① ローカル即判定（PWA対策）
-      const local = getDriverSessionId();
-
-      if (local) {
-        router.replace("/report");
-        return;
-      }
-
-      // ② Supabaseセッション（フォールバック）
+      // Supabaseの実セッションを必ず確認する（ローカル値だけで判定しない）
       const { data } = await supabase.auth.getSession();
 
       if (data.session) {
         router.replace("/report");
-      } else {
-        router.replace("/login");
+        return;
       }
+
+      // セッションが無効なら、古いローカル情報も一緒に消しておく
+      clearDriverSession();
+      router.replace("/login");
     };
 
     run();
