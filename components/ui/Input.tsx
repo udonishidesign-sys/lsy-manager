@@ -21,6 +21,9 @@ export default function Input({
   const showClear = isTime && !disabled && value !== "" && value !== undefined;
 
   const handleClear = () => {
+    // iOSのネイティブ「クリア」ボタンはinputイベントを発火させないことがあり、
+    // Reactのonchangeが検知できず画面が更新されないケースがある。
+    // そのため、独自のクリアボタンで直接onChangeを呼び出す。
     onChange({
       target: { value: "" },
     } as React.ChangeEvent<HTMLInputElement>);

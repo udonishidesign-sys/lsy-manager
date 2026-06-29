@@ -450,6 +450,8 @@ export default function ReportNewPage() {
                 </select>
               </div>
             )}
+          </Card>
+          <Card>
             {workStatus !== "欠勤" && (
               <>
                 {/* 勤務時間 */}

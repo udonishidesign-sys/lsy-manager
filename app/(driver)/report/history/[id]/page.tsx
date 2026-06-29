@@ -179,11 +179,11 @@ export default function ReportDetailPage() {
               <div className="grid grid-cols-2 gap-4">
                 <DetailField
                   label="出庫メーター"
-                  value={`${report.odometer_start ?? 0}m`}
+                  value={`${report.odometer_start ?? 0}km`}
                 />
                 <DetailField
                   label="帰庫メーター"
-                  value={`${report.odometer_end ?? 0}m`}
+                  value={`${report.odometer_end ?? 0}km`}
                 />
               </div>
               <div>
