@@ -526,38 +526,6 @@ export default function ReportNewPage() {
                   )}
                 </div>
               </Card>
-              <Card>
-                {/* 勤務時間 */}
-                <div className="space-y-3">
-                  <Input
-                    label="業務開始時間"
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                  />
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      label="休憩開始"
-                      type="time"
-                      value={breakStart}
-                      onChange={(e) => setBreakStart(e.target.value)}
-                    />
-                    <Input
-                      label="休憩終了"
-                      type="time"
-                      value={breakEnd}
-                      onChange={(e) => setBreakEnd(e.target.value)}
-                    />
-                  </div>
-                  <Input
-                    label="業務終了時間"
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                  />
-                </div>
-              </Card>
 
               {/* 運行前点検 */}
               <Card>
@@ -665,8 +633,8 @@ export default function ReportNewPage() {
                 </details>
               </Card>
 
+              {/* 走行情報 */}
               <Card>
-                {/* 走行情報 */}
                 <div className="space-y-3">
                   <FormSection icon={<Van size={24} />} title="走行情報" />
                   <div className="grid grid-cols-2 gap-3">
@@ -694,78 +662,51 @@ export default function ReportNewPage() {
                 </div>
               </Card>
 
+              {/* 勤務時間 */}
               <Card>
-                <FormSection icon={<FileText size={24} />} title="伝票管理" />
-                <span className="text-slate-500 font-semibold">
-                  出発前持出伝票
-                </span>
-                <div className="grid grid-cols-2 gap-4">
+                <FormSection icon={<Clock size={24} />} title="勤務時間" />
+                <div className="space-y-3">
                   <Input
-                    label="AM便"
-                    type="number"
-                    value={carryOutAm}
-                    suffix="枚"
-                    onChange={(e) => setCarryOutAm(e.target.value)}
+                    label="業務開始時間"
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
                   />
-                  <Input
-                    label="PM便"
-                    type="number"
-                    value={carryOutPm}
-                    suffix="枚"
-                    onChange={(e) => setCarryOutPm(e.target.value)}
-                  />
-                </div>
-                <span className="text-slate-500 font-semibold">
-                  帰庫時持帰り伝票
-                </span>
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label="AM便"
-                    type="number"
-                    value={carryBackAm}
-                    suffix="枚"
-                    onChange={(e) => setCarryBackAm(e.target.value)}
-                  />
-                  <Input
-                    label="PM便"
-                    type="number"
-                    value={carryBackPm}
-                    suffix="枚"
-                    onChange={(e) => setCarryBackPm(e.target.value)}
-                  />
-                </div>
-              </Card>
 
-              <Card>
-                <FormSection icon={<Clock size={24} />} title="配達完了時間" />
-                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      label="休憩開始"
+                      type="time"
+                      value={breakStart}
+                      onChange={(e) => setBreakStart(e.target.value)}
+                    />
+                    <Input
+                      label="休憩終了"
+                      type="time"
+                      value={breakEnd}
+                      onChange={(e) => setBreakEnd(e.target.value)}
+                    />
+                  </div>
                   <Input
-                    label="AM便"
+                    label="業務終了時間"
                     type="time"
-                    value={lastDeliveryAm}
-                    onChange={(e) => setLastDeliveryAm(e.target.value)}
-                  />
-                  <Input
-                    label="PM便"
-                    type="time"
-                    value={lastDeliveryPm}
-                    onChange={(e) => setLastDeliveryPm(e.target.value)}
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
                   />
                 </div>
               </Card>
 
               <Card>
                 {/* 配送数 */}
-                <div>
-                  <FormSection icon={<Package size={24} />} title="配送実績" />
-                  <Input
-                    label="配達完了件数"
-                    type="number"
-                    value={deliveryCount}
-                    suffix="件"
-                    onChange={(e) => setDeliveryCount(e.target.value)}
-                  />
-                </div>
+
+                <FormSection icon={<Package size={24} />} title="配送実績" />
+                <Input
+                  label="配達完了件数"
+                  type="number"
+                  value={deliveryCount}
+                  suffix="件"
+                  onChange={(e) => setDeliveryCount(e.target.value)}
+                />
 
                 {/* 売上 */}
                 <div className="bg-slate-100 rounded-lg p-3">
@@ -779,6 +720,13 @@ export default function ReportNewPage() {
                     <span>¥{sales.toLocaleString()}</span>
                   </div>
                 </div>
+                <Input
+                  label="伝票枚数"
+                  type="number"
+                  value={carryOutAm}
+                  suffix="枚"
+                  onChange={(e) => setCarryOutAm(e.target.value)}
+                />
               </Card>
             </>
           )}
