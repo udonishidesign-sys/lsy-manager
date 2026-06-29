@@ -451,43 +451,6 @@ export default function ReportNewPage() {
               </div>
             )}
           </Card>
-          <Card>
-            {workStatus !== "欠勤" && (
-              <>
-                {/* 勤務時間 */}
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      label="出庫時間"
-                      type="time"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                    />
-                    <Input
-                      label="帰庫時間"
-                      type="time"
-                      value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      label="休憩開始"
-                      type="time"
-                      value={breakStart}
-                      onChange={(e) => setBreakStart(e.target.value)}
-                    />
-                    <Input
-                      label="休憩終了"
-                      type="time"
-                      value={breakEnd}
-                      onChange={(e) => setBreakEnd(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-          </Card>
           {workStatus !== "欠勤" && (
             <>
               {/* アルコールチェック */}
@@ -561,6 +524,38 @@ export default function ReportNewPage() {
                       登録済み写真を見る
                     </a>
                   )}
+                </div>
+              </Card>
+              <Card>
+                {/* 勤務時間 */}
+                <div className="space-y-3">
+                  <Input
+                    label="業務開始時間"
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      label="休憩開始"
+                      type="time"
+                      value={breakStart}
+                      onChange={(e) => setBreakStart(e.target.value)}
+                    />
+                    <Input
+                      label="休憩終了"
+                      type="time"
+                      value={breakEnd}
+                      onChange={(e) => setBreakEnd(e.target.value)}
+                    />
+                  </div>
+                  <Input
+                    label="業務終了時間"
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                  />
                 </div>
               </Card>
 
