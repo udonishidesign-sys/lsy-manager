@@ -49,7 +49,11 @@ export default function LoginPage() {
     if (!driverId) return;
 
     setDriverSessionId(driverId);
-    router.push("/report");
+
+    // ★ここが重要
+    await new Promise((r) => setTimeout(r, 100));
+
+    router.replace("/report");
   };
 
   return (
