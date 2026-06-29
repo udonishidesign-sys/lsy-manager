@@ -10,6 +10,7 @@ import Input from "@/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 import PageTitle from "@/components/ui/PageTitle";
 import { getDriverSessionId, clearDriverSession } from "@/lib/driver-session";
+import PageActions from "@/components/ui/PageActions";
 import {
   ClipboardPen,
   Package,
@@ -18,6 +19,7 @@ import {
   Clock,
   CircleCheckBig,
   ChevronDown,
+  Eye,
 } from "lucide-react";
 
 type Project = {
@@ -26,7 +28,7 @@ type Project = {
   current_unit_price: number;
 };
 
-export default function ReportNewPage() {
+export default function ReportEditPage() {
   const router = useRouter();
   const [driverId, setDriverId] = useState<number | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -67,6 +69,9 @@ export default function ReportNewPage() {
   const [checkLicensePlate, setCheckLicensePlate] = useState(false);
   const [checkVehicleInspection, setCheckVehicleInspection] = useState(false);
   const [checkInsurance, setCheckInsurance] = useState(false);
+  const [alcoholCheckTime, setAlcoholCheckTime] = useState("");
+  const [alcoholCheckFile, setAlcoholCheckFile] = useState<File | null>(null);
+  const [alcoholCheckImageUrl, setAlcoholCheckImageUrl] = useState("");
   const selectedProject = projects.find((p) => p.id === projectId);
   const unitPrice = selectedProject?.current_unit_price ?? 0;
   const sales = deliveryCount * unitPrice;
@@ -181,6 +186,9 @@ export default function ReportNewPage() {
       setCheckLicensePlate(data.check_license_plate ?? false);
       setCheckVehicleInspection(data.check_vehicle_inspection ?? false);
       setCheckInsurance(data.check_insurance ?? false);
+      setAlcoholCheckTime(data.alcohol_check_time ?? "");
+      setAlcoholCheckImageUrl(data.alcohol_check_image_url ?? "");
+      setAbsenceReason(data.absence_reason ?? "");
     };
 
     loadReport();
@@ -210,7 +218,44 @@ export default function ReportNewPage() {
       return;
     }
 
+    const uploadAlcoholCheckImage = async () => {
+      if (!alcoholCheckFile || !driverId) {
+        return alcoholCheckImageUrl || null;
+      }
+
+      const fileExt = alcoholCheckFile.name.split(".").pop() || "jpg";
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+      const filePath = `alcohol-checks/${driverId}/${date}/${fileName}`;
+
+      const { error } = await supabase.storage
+        .from("report-files")
+        .upload(filePath, alcoholCheckFile);
+
+      if (error) throw error;
+
+      const { data } = supabase.storage
+        .from("report-files")
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    };
+
     setSaving(true);
+
+    let uploadedAlcoholImageUrl = alcoholCheckImageUrl || null;
+
+    try {
+      uploadedAlcoholImageUrl = await uploadAlcoholCheckImage();
+    } catch (error) {
+      console.error(error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "アルコールチェック写真のアップロードに失敗しました",
+      );
+      setSaving(false);
+      return;
+    }
 
     const reportData = {
       driver_id: driverId,
@@ -224,15 +269,15 @@ export default function ReportNewPage() {
       end_time: workStatus === "欠勤" ? null : endTime || null,
       break_start: workStatus === "欠勤" ? null : breakStart || null,
       break_end: workStatus === "欠勤" ? null : breakEnd || null,
-      last_delivery_am: workStatus === "欠勤" ? null : lastDeliveryAm || null,
-      last_delivery_pm: workStatus === "欠勤" ? null : lastDeliveryPm || null,
+      last_delivery_am: null,
+      last_delivery_pm: null,
       odometer_start: workStatus === "欠勤" ? 0 : odometerStart,
       odometer_end: workStatus === "欠勤" ? 0 : odometerEnd,
       carry_out_am: workStatus === "欠勤" ? 0 : carryOutAm,
-      carry_out_pm: workStatus === "欠勤" ? 0 : carryOutPm,
-      carry_back_am: workStatus === "欠勤" ? 0 : carryBackAm,
-      carry_back_pm: workStatus === "欠勤" ? 0 : carryBackPm,
-      collection_count: workStatus === "欠勤" ? 0 : collectionCount,
+      carry_out_pm: 0,
+      carry_back_am: 0,
+      carry_back_pm: 0,
+      collection_count: 0,
       check_brake: workStatus === "欠勤" ? false : checkBrake,
       check_tire: workStatus === "欠勤" ? false : checkTire,
       check_light: workStatus === "欠勤" ? false : checkLight,
@@ -253,6 +298,10 @@ export default function ReportNewPage() {
         workStatus === "欠勤" ? false : checkVehicleInspection,
       check_insurance: workStatus === "欠勤" ? false : checkInsurance,
       note,
+      alcohol_check_time:
+        workStatus === "欠勤" ? null : alcoholCheckTime || null,
+      alcohol_check_image_url:
+        workStatus === "欠勤" ? null : uploadedAlcoholImageUrl,
     };
 
     const { data: existing, error: checkError } = await supabase
@@ -384,44 +433,83 @@ export default function ReportNewPage() {
                 </select>
               </div>
             )}
-            {workStatus !== "欠勤" && (
-              <>
-                {/* 勤務時間 */}
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      label="出庫時間"
-                      type="time"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                    />
-                    <Input
-                      label="帰庫時間"
-                      type="time"
-                      value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      label="休憩開始"
-                      type="time"
-                      value={breakStart}
-                      onChange={(e) => setBreakStart(e.target.value)}
-                    />
-                    <Input
-                      label="休憩終了"
-                      type="time"
-                      value={breakEnd}
-                      onChange={(e) => setBreakEnd(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
           </Card>
           {workStatus !== "欠勤" && (
             <>
+              {/* アルコールチェック */}
+              <Card>
+                <div className="space-y-3">
+                  <FormSection
+                    icon={<ClipboardPen size={24} />}
+                    title="アルコールチェック"
+                  />
+
+                  <Input
+                    label="チェック時間"
+                    type="time"
+                    value={alcoholCheckTime}
+                    onChange={(e) => setAlcoholCheckTime(e.target.value)}
+                  />
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="flex items-center justify-center h-12 rounded-lg bg-teal-500 text-white font-bold cursor-pointer">
+                      撮影する
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                        onChange={(e) =>
+                          setAlcoholCheckFile(e.target.files?.[0] ?? null)
+                        }
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-center h-12 rounded-lg border border-teal-500 text-teal-600 font-bold bg-white cursor-pointer">
+                      選択する
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) =>
+                          setAlcoholCheckFile(e.target.files?.[0] ?? null)
+                        }
+                      />
+                    </label>
+                  </div>
+
+                  {alcoholCheckFile && (
+                    <div className="flex justify-between items-center">
+                      <p className="mt-2 text-sm text-teal-600">
+                        {alcoholCheckFile.name}
+                      </p>
+                      <PageActions
+                        actions={[
+                          {
+                            type: "detail",
+                            href: alcoholCheckImageUrl,
+                            target: "_blank",
+                            label: "",
+                            icon: <Eye size={20} />,
+                          },
+                        ]}
+                      />
+                    </div>
+                  )}
+
+                  {!alcoholCheckFile && alcoholCheckImageUrl && (
+                    <a
+                      href={alcoholCheckImageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block mt-2 text-sm text-teal-600 underline"
+                    >
+                      登録済み写真を見る
+                    </a>
+                  )}
+                </div>
+              </Card>
+
               {/* 運行前点検 */}
               <Card>
                 <details className="bg-white">
@@ -528,8 +616,8 @@ export default function ReportNewPage() {
                 </details>
               </Card>
 
+              {/* 走行情報 */}
               <Card>
-                {/* 走行情報 */}
                 <div className="space-y-3">
                   <FormSection icon={<Van size={24} />} title="走行情報" />
                   <div className="grid grid-cols-2 gap-3">
@@ -557,78 +645,50 @@ export default function ReportNewPage() {
                 </div>
               </Card>
 
+              {/* 勤務時間 */}
               <Card>
-                <FormSection icon={<FileText size={24} />} title="伝票管理" />
-                <span className="text-slate-500 font-semibold">
-                  出発前持出伝票
-                </span>
-                <div className="grid grid-cols-2 gap-4">
+                <FormSection icon={<Clock size={24} />} title="勤務時間" />
+                <div className="space-y-3">
                   <Input
-                    label="AM便"
-                    type="number"
-                    value={carryOutAm}
-                    suffix="枚"
-                    onChange={(e) => setCarryOutAm(Number(e.target.value))}
+                    label="業務開始時間"
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
                   />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      label="休憩開始"
+                      type="time"
+                      value={breakStart}
+                      onChange={(e) => setBreakStart(e.target.value)}
+                    />
+                    <Input
+                      label="休憩終了"
+                      type="time"
+                      value={breakEnd}
+                      onChange={(e) => setBreakEnd(e.target.value)}
+                    />
+                  </div>
                   <Input
-                    label="PM便"
-                    type="number"
-                    value={carryOutPm}
-                    suffix="枚"
-                    onChange={(e) => setCarryOutPm(Number(e.target.value))}
-                  />
-                </div>
-                <span className="text-slate-500 font-semibold">
-                  帰庫時持帰り伝票
-                </span>
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label="AM便"
-                    type="number"
-                    value={carryBackAm}
-                    suffix="枚"
-                    onChange={(e) => setCarryBackAm(Number(e.target.value))}
-                  />
-                  <Input
-                    label="PM便"
-                    type="number"
-                    value={carryBackPm}
-                    suffix="枚"
-                    onChange={(e) => setCarryBackPm(Number(e.target.value))}
+                    label="業務終了時間"
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
                   />
                 </div>
               </Card>
 
+              {/* 配送実績 */}
               <Card>
-                <FormSection icon={<Clock size={24} />} title="配達完了時間" />
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label="AM便"
-                    type="time"
-                    value={lastDeliveryAm}
-                    onChange={(e) => setLastDeliveryAm(e.target.value)}
-                  />
-                  <Input
-                    label="PM便"
-                    type="time"
-                    value={lastDeliveryPm}
-                    onChange={(e) => setLastDeliveryPm(e.target.value)}
-                  />
-                </div>
-              </Card>
-
-              <Card>
-                {/* 配送数 */}
-                <div>
-                  <FormSection icon={<Package size={24} />} title="配送実績" />
-                  <Input
-                    label="配達完了件数"
-                    type="number"
-                    value={deliveryCount}
-                    suffix="件"
-                    onChange={(e) => setDeliveryCount(Number(e.target.value))}
-                  />
-                </div>
+                <FormSection icon={<Package size={24} />} title="配送実績" />
+                <Input
+                  label="配達完了件数"
+                  type="number"
+                  value={deliveryCount}
+                  suffix="件"
+                  onChange={(e) => setDeliveryCount(Number(e.target.value))}
+                />
 
                 {/* 売上 */}
                 <div className="bg-slate-100 rounded-lg p-3">
@@ -642,6 +702,13 @@ export default function ReportNewPage() {
                     <span>¥{sales.toLocaleString()}</span>
                   </div>
                 </div>
+                <Input
+                  label="伝票枚数"
+                  type="number"
+                  value={carryOutAm}
+                  suffix="枚"
+                  onChange={(e) => setCarryOutAm(Number(e.target.value))}
+                />
               </Card>
             </>
           )}

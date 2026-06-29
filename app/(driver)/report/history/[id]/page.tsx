@@ -16,6 +16,7 @@ import {
   FileText,
   Clock,
   CircleCheckBig,
+  ChevronDown,
 } from "lucide-react";
 
 type Report = {
@@ -57,6 +58,8 @@ type Report = {
   check_license_plate: boolean | null;
   check_vehicle_inspection: boolean | null;
   check_insurance: boolean | null;
+  alcohol_check_time: string | null;
+  alcohol_check_image_url: string | null;
 };
 
 export default function ReportDetailPage() {
@@ -145,35 +148,71 @@ export default function ReportDetailPage() {
               value={report.absence_reason ?? "-"}
             />
           )}
-
-          {report.work_status !== "欠勤" && (
-            <>
-              <div className="grid grid-cols-2 gap-4">
-                <DetailField
-                  label="出庫時間"
-                  value={formatTime(report.start_time)}
-                />
-                <DetailField
-                  label="帰庫時間"
-                  value={formatTime(report.end_time)}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <DetailField
-                  label="休憩開始"
-                  value={formatTime(report.break_start)}
-                />
-                <DetailField
-                  label="休憩終了"
-                  value={formatTime(report.break_end)}
-                />
-              </div>
-            </>
-          )}
         </Card>
+
         {report.work_status !== "欠勤" && (
           <>
+            {/* アルコールチェック */}
+            <Card>
+              <FormSection
+                icon={<ClipboardPen size={24} />}
+                title="アルコールチェック"
+              />
+              <DetailField
+                label="チェック時間"
+                value={formatTime(report.alcohol_check_time)}
+              />
+              {report.alcohol_check_image_url ? (
+                <div className="mt-2">
+                  <a
+                    href={report.alcohol_check_image_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block text-sm text-teal-600 underline"
+                  >
+                    登録済み写真を見る
+                  </a>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500 mt-2">写真なし</p>
+              )}
+            </Card>
+
+            {/* 運行前点検 */}
+            <Card>
+              <details className="bg-white">
+                <summary className="list-none cursor-pointer flex justify-between items-center">
+                  <span className="flex justify-between gap-2 text-slate-700 font-bold">
+                    <CircleCheckBig size={24} className="text-teal-500" />
+                    運行前点検
+                  </span>
+                  <ChevronDown className="text-teal-500" />
+                </summary>
+                <div className="space-y-3 border-t border-teal-500 mt-2 pt-4">
+                  <div className="grid grid-cols-2 gap-2.5 text-sm text-slate-600">
+                    <p>ブレーキ: {checked(report.check_brake)}</p>
+                    <p>原動機: {checked(report.check_engine)}</p>
+                    <p>ハンドル: {checked(report.check_handle)}</p>
+                    <p>タイヤ: {checked(report.check_tire)}</p>
+                    <p>ワイパー: {checked(report.check_wiper)}</p>
+                    <p>クラクション: {checked(report.check_horn)}</p>
+                    <p>ウィンカー: {checked(report.check_turn_signal)}</p>
+                    <p>バッテリー: {checked(report.check_battery)}</p>
+                    <p>灯火装置: {checked(report.check_light)}</p>
+                    <p>非常用信号: {checked(report.check_emergency_signal)}</p>
+                    <p>燃料: {checked(report.check_fuel)}</p>
+                    <p>冷却水: {checked(report.check_coolant)}</p>
+                    <p>オイル: {checked(report.check_oil)}</p>
+                    <p>登録番号表: {checked(report.check_license_plate)}</p>
+                    <p>検査証: {checked(report.check_vehicle_inspection)}</p>
+                    <p>保険証: {checked(report.check_insurance)}</p>
+                    <p>ドラレコ: {checked(report.check_drive_recorder)}</p>
+                  </div>
+                </div>
+              </details>
+            </Card>
+
+            {/* 走行情報 */}
             <Card>
               <FormSection icon={<Van size={24} />} title="走行情報" />
               <div className="grid grid-cols-2 gap-4">
@@ -186,93 +225,60 @@ export default function ReportDetailPage() {
                   value={`${report.odometer_end ?? 0}km`}
                 />
               </div>
-              <div>
-                <DetailField label="走行距離" value={`${mileage}m`} />
-              </div>
-            </Card>
-            <Card>
-              <FormSection
-                icon={<CircleCheckBig size={24} />}
-                title="運行前点検"
-              />
-
-              <div className="grid grid-cols-2 gap-2.5 text-sm text-slate-600">
-                <p>ブレーキ: {checked(report.check_brake)}</p>
-                <p>原動機: {checked(report.check_engine)}</p>
-                <p>ハンドル: {checked(report.check_handle)}</p>
-                <p>タイヤ: {checked(report.check_tire)}</p>
-                <p>ワイパー: {checked(report.check_wiper)}</p>
-                <p>クラクション: {checked(report.check_horn)}</p>
-                <p>ウィンカー: {checked(report.check_turn_signal)}</p>
-                <p>バッテリー: {checked(report.check_battery)}</p>
-                <p>灯火装置: {checked(report.check_light)}</p>
-                <p>非常用信号: {checked(report.check_emergency_signal)}</p>
-                <p>燃料: {checked(report.check_fuel)}</p>
-                <p>冷却水: {checked(report.check_coolant)}</p>
-                <p>オイル: {checked(report.check_oil)}</p>
-                <p>登録番号表: {checked(report.check_license_plate)}</p>
-                <p>検査証: {checked(report.check_vehicle_inspection)}</p>
-                <p>保険証: {checked(report.check_insurance)}</p>
-                <p>ドラレコ: {checked(report.check_drive_recorder)}</p>
+              <div className="bg-slate-100 rounded-lg p-3 flex justify-between">
+                <span className="text-slate-500">走行距離</span>
+                <span className="font-bold text-slate-700">
+                  {mileage.toLocaleString()} km
+                </span>
               </div>
             </Card>
 
+            {/* 勤務時間 */}
             <Card>
-              <FormSection icon={<FileText size={24} />} title="伝票管理" />
-              <span className="text-slate-500 font-semibold">
-                出発前持出伝票
-              </span>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <FormSection icon={<Clock size={24} />} title="勤務時間" />
+              <div className="space-y-3">
+                <DetailField
+                  label="業務開始時間"
+                  value={formatTime(report.start_time)}
+                />
+                <div className="grid grid-cols-2 gap-4">
                   <DetailField
-                    label="AM便"
-                    value={`${report.carry_out_am ?? 0}枚`}
+                    label="休憩開始"
+                    value={formatTime(report.break_start)}
+                  />
+                  <DetailField
+                    label="休憩終了"
+                    value={formatTime(report.break_end)}
                   />
                 </div>
-                <div>
-                  <DetailField
-                    label="PM便"
-                    value={`${report.carry_out_pm ?? 0}枚`}
-                  />
-                </div>
-              </div>
-              <span className="text-slate-500 font-semibold">
-                帰庫時持帰り伝票
-              </span>
-              <div className="grid grid-cols-2 gap-4">
                 <DetailField
-                  label="AM便"
-                  value={`${report.carry_back_am ?? 0}枚`}
-                />
-                <DetailField
-                  label="PM便"
-                  value={`${report.carry_back_pm ?? 0}枚`}
+                  label="業務終了時間"
+                  value={formatTime(report.end_time)}
                 />
               </div>
             </Card>
 
-            <Card>
-              <FormSection icon={<Clock size={24} />} title="配達完了時間" />
-              <div className="grid grid-cols-2 gap-4">
-                <DetailField
-                  label="AM便"
-                  value={report.last_delivery_am?.slice(0, 5) ?? "-"}
-                />
-
-                <DetailField
-                  label="PM便"
-                  value={report.last_delivery_pm?.slice(0, 5) ?? "-"}
-                />
-              </div>
-            </Card>
-
+            {/* 配送実績 */}
             <Card>
               <FormSection icon={<Package size={24} />} title="配送実績" />
               <DetailField
-                label="配送件数"
-                value={`${report.delivery_count}件`}
+                label="配達完了件数"
+                value={`${report.delivery_count ?? 0}件`}
               />
-              <DetailField label="売上" value={formatYen(sales)} />
+              <div className="bg-slate-100 rounded-lg p-3">
+                <div className="flex justify-between text-slate-700">
+                  <span>単価</span>
+                  <span>{formatYen(report.unit_price ?? 0)}</span>
+                </div>
+                <div className="flex justify-between font-semibold mt-2 text-slate-700">
+                  <span>売上</span>
+                  <span>{formatYen(sales)}</span>
+                </div>
+              </div>
+              <DetailField
+                label="伝票枚数"
+                value={`${report.carry_out_am ?? 0}枚`}
+              />
             </Card>
           </>
         )}
