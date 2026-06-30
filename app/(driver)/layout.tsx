@@ -62,12 +62,7 @@ export default function DriverLayout({
       }
     };
 
-    // 初回マウント時（直接アクセス・リロード時など）
     loadDriver();
-
-    // ログイン画面から/reportへ移動した場合、このレイアウトは
-    // 再マウントされないため、ログイン完了時に飛んでくる
-    // カスタムイベントを受けて再取得する
     window.addEventListener("driver-session-updated", loadDriver);
 
     return () => {
@@ -77,10 +72,10 @@ export default function DriverLayout({
 
   return (
     <div className="min-h-screen bg-slate-100">
-      <header className="bg-slate-700 max-w-md mx-auto text-white px-4 py-3">
+      <header className="max-w-md mx-auto bg-white text-slate-600 px-4 pb- border-b border-slate-hyt fixed w-full z-10">
         <div className="max-w-md mx-auto flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs text-slate-200">ドライバー用</p>
+            <p className="text-xs">ドライバー用</p>
             <p className="font-bold text-lg">LSY 日報</p>
           </div>
 
