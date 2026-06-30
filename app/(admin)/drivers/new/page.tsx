@@ -96,7 +96,7 @@ export default function NewDriverPage() {
                 onClick={saveDriver}
                 disabled={loading}
                 icon={<Save size={18} />}
-                className="hidden md:flex "
+                className="hidden md:flex"
               >
                 {loading ? "保存中..." : "保存する"}
               </Button>

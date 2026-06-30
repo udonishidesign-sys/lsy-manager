@@ -34,8 +34,12 @@ export default function ReportEditPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState<number | null>(null);
   const [projectName, setProjectName] = useState("");
+  const [vehicleNumber, setVehicleNumber] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [deliveryCount, setDeliveryCount] = useState(0);
+  const [deliveryArea, setDeliveryArea] = useState("");
+  const [startLocation, setStartLocation] = useState("");
+  const [endLocation, setEndLocation] = useState("");
   const [workStatus, setWorkStatus] = useState<"出勤" | "欠勤" | "">("");
   const [note, setNote] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -122,6 +126,7 @@ export default function ReportEditPage() {
       if (!project) return;
       setProjectId(project.id);
       setProjectName(project.name);
+      setVehicleNumber(driver.vehicle_number ?? "");
     };
     loadDriver();
   }, [driverId]);
@@ -153,6 +158,9 @@ export default function ReportEditPage() {
       setProjectId(data.project_id);
       setDate(data.report_date);
       setDeliveryCount(data.delivery_count ?? 0);
+      setDeliveryArea(data.delivery_area ?? "");
+      setStartLocation(data.start_location ?? "");
+      setEndLocation(data.end_location ?? "");
       setCollectionCount(data.collection_count ?? 0);
       setWorkStatus(data.work_status ?? "");
       setNote(data.note ?? "");
@@ -260,13 +268,17 @@ export default function ReportEditPage() {
     const reportData = {
       driver_id: driverId,
       project_id: projectId,
+      vehicle_number: vehicleNumber || null,
       report_date: date,
       delivery_count: workStatus === "欠勤" ? 0 : deliveryCount,
+      delivery_area: workStatus === "欠勤" ? null : deliveryArea || null,
       unit_price: unitPrice,
       work_status: workStatus,
       absence_reason: workStatus === "欠勤" ? absenceReason || null : null,
       start_time: workStatus === "欠勤" ? null : startTime || null,
       end_time: workStatus === "欠勤" ? null : endTime || null,
+      start_location: workStatus === "欠勤" ? null : startLocation || null,
+      end_location: workStatus === "欠勤" ? null : endLocation || null,
       break_start: workStatus === "欠勤" ? null : breakStart || null,
       break_end: workStatus === "欠勤" ? null : breakEnd || null,
       last_delivery_am: null,
@@ -367,6 +379,15 @@ export default function ReportEditPage() {
               <label className="block text-sm text-gray-500 mb-1">案件</label>
               <div className="rounded-lg text-gray-500 bg-slate-100 px-4 py-3 flex items-center">
                 {projectName}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-500 mb-1">
+                車両ナンバー
+              </label>
+              <div className="rounded-lg text-gray-500 bg-slate-100 px-4 py-3 flex items-center">
+                {vehicleNumber || "未登録"}
               </div>
             </div>
 
@@ -620,13 +641,31 @@ export default function ReportEditPage() {
               <Card>
                 <div className="space-y-3">
                   <FormSection icon={<Van size={24} />} title="走行情報" />
+                  <Input
+                    label="配送エリア"
+                    type="text"
+                    value={deliveryArea}
+                    onChange={(e) => setDeliveryArea(e.target.value)}
+                  />
                   <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      label="出発場所"
+                      type="text"
+                      value={startLocation}
+                      onChange={(e) => setStartLocation(e.target.value)}
+                    />
                     <Input
                       label="出庫メーター"
                       type="number"
                       value={odometerStart}
                       suffix="km"
                       onChange={(e) => setOdometerStart(Number(e.target.value))}
+                    />
+                    <Input
+                      label="帰着場所"
+                      type="text"
+                      value={endLocation}
+                      onChange={(e) => setEndLocation(e.target.value)}
                     />
                     <Input
                       label="帰庫メーター"
@@ -682,6 +721,7 @@ export default function ReportEditPage() {
               {/* 配送実績 */}
               <Card>
                 <FormSection icon={<Package size={24} />} title="配送実績" />
+
                 <Input
                   label="配達完了件数"
                   type="number"

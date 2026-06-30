@@ -15,6 +15,7 @@ type Report = {
   project_id: number;
   report_date: string;
   delivery_count: number;
+  delivery_area: string | null;
   unit_price: number;
   work_status: "出勤" | "欠勤";
   note: string | null;
@@ -81,6 +82,11 @@ export default function ReportHistoryPage() {
                     <p className="text-sm text-gray-500">
                       配送 {r.delivery_count}個 / 売上 {formatYen(sales)}
                     </p>
+                    {r.delivery_area && (
+                      <p className="text-xs text-gray-400">
+                        配送エリア: {r.delivery_area}
+                      </p>
+                    )}
                   </Link>
                 );
               })}

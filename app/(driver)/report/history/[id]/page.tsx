@@ -23,13 +23,17 @@ type Report = {
   id: number;
   report_date: string;
   project_id: number;
+  vehicle_number: string | null;
   delivery_count: number;
+  delivery_area: string | null;
   unit_price: number;
   work_status: string;
   absence_reason: string | null;
   note: string | null;
   start_time: string | null;
   end_time: string | null;
+  start_location: string | null;
+  end_location: string | null;
   break_start: string | null;
   break_end: string | null;
   odometer_start: number | null;
@@ -140,6 +144,10 @@ export default function ReportDetailPage() {
         <Card>
           <FormSection icon={<ClipboardPen size={24} />} title="勤務情報" />
           <DetailField label="案件" value={projectName} />
+          <DetailField
+            label="車両ナンバー"
+            value={report.vehicle_number ?? "未登録"}
+          />
           <DetailField label="日付" value={report.report_date} />
           <DetailField label="出勤区分" value={report.work_status} />
           {report.work_status === "欠勤" && (
@@ -215,10 +223,22 @@ export default function ReportDetailPage() {
             {/* 走行情報 */}
             <Card>
               <FormSection icon={<Van size={24} />} title="走行情報" />
+              <DetailField
+                label="配送エリア"
+                value={report.delivery_area ?? "-"}
+              />
               <div className="grid grid-cols-2 gap-4">
+                <DetailField
+                  label="出発場所"
+                  value={report.start_location ?? "-"}
+                />
                 <DetailField
                   label="出庫メーター"
                   value={`${report.odometer_start ?? 0}km`}
+                />
+                <DetailField
+                  label="帰着場所"
+                  value={report.end_location ?? "-"}
                 />
                 <DetailField
                   label="帰庫メーター"
@@ -236,6 +256,7 @@ export default function ReportDetailPage() {
             {/* 勤務時間 */}
             <Card>
               <FormSection icon={<Clock size={24} />} title="勤務時間" />
+
               <div className="space-y-3">
                 <DetailField
                   label="業務開始時間"
