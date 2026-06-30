@@ -61,7 +61,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="p-4">
+    <main className="p-4 pt-24">
       <div className="max-w-md mx-auto space-y-4">
         <h1 className="text-xl font-bold text-gray-500">ドライバーログイン</h1>
 
