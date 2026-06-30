@@ -7,7 +7,7 @@ import AuthGuard from "@/components/AuthGuard";
 export default function ReportHomePage() {
   return (
     <AuthGuard>
-      <main className="p-4 min-h-screen max-w-md mx-auto bg-white">
+      <main className="p-4 pt-24 min-h-screen max-w-md mx-auto bg-white">
         <div className="max-w-md space-y-4">
           <Link
             href="/report/new"

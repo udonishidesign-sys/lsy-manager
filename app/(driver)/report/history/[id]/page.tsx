@@ -131,7 +131,7 @@ export default function ReportDetailPage() {
   const checked = (value: boolean | null) => (value ? "済" : "未確認");
 
   return (
-    <main className="px-4 pt-6 pb-24">
+    <main className="px-4 pt-24 pb-24">
       <div className="max-w-md mx-auto space-y-4">
         <div className="flex items-center justify-between">
           {/* 入力カード */}

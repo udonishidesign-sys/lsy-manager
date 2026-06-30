@@ -10,11 +10,6 @@ export default function Page() {
   const decided = useRef(false);
 
   useEffect(() => {
-    // onAuthStateChangeの初回発火（INITIAL_SESSION）を待つ。
-    // これはSupabaseがlocalStorage/IndexedDBからのセッション復元を
-    // 完了した後に必ず一度発火するため、getSession()を起動直後に
-    // 単発で呼ぶより信頼できる（iOS PWAのストレージ初期化の遅延に
-    // 影響されない）。
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         if (decided.current) return;

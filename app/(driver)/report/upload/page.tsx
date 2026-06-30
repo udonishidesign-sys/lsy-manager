@@ -88,7 +88,7 @@ export default function UploadPage() {
     );
 
   return (
-    <main className="px-4 pt-6 pb-24">
+    <main className="px-4 pt-24 pb-24">
       <div className="max-w-md mx-auto space-y-4">
         <PageTitle>ファイル提出</PageTitle>
         <div className="bg-white rounded-xl shadow p-4 space-y-4">

@@ -72,7 +72,7 @@ export default function DriverLayout({
 
   return (
     <div className="min-h-screen bg-slate-100">
-      <header className="max-w-md mx-auto bg-white text-slate-600 px-4 pb- border-b border-slate-hyt fixed w-full z-10">
+      <header className="max-w-md mx-auto bg-white text-slate-600 px-4 pb-2 border-b border-slate-hyt fixed w-full z-10">
         <div className="max-w-md mx-auto flex items-center justify-between gap-4">
           <div>
             <p className="text-xs">ドライバー用</p>

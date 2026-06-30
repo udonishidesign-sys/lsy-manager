@@ -51,7 +51,7 @@ export default function ReportHistoryPage() {
 
   return (
     <AuthGuard>
-      <main className="px-4 pt-6 pb-40">
+      <main className="px-4 pt-24 pb-40">
         <div className="max-w-md mx-auto space-y-4">
           <PageTitle>日報履歴</PageTitle>
 

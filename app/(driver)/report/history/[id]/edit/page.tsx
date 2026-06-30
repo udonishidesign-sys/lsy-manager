@@ -368,7 +368,7 @@ export default function ReportEditPage() {
   }
 
   return (
-    <main className="px-4 pt-6 pb-40">
+    <main className="px-4 pt-24 pb-40">
       <div className="max-w-md mx-auto space-y-4">
         {/* 入力カード */}
         <div className="space-y-4">
