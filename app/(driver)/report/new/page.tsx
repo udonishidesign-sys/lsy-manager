@@ -401,7 +401,7 @@ export default function ReportNewPage() {
 
             <div>
               <label className="block text-sm text-gray-500 mb-1">
-                ナンバー
+                車両ナンバー
               </label>
               <div className="rounded-lg text-gray-500 bg-slate-100 px-4 py-3 flex items-center">
                 {plateNumber || "未登録"}
