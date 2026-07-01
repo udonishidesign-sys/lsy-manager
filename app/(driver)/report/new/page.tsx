@@ -133,6 +133,9 @@ export default function ReportNewPage() {
       setProjectName(project.name);
       setUnitPrice(project.current_unit_price);
       setPlateNumber(driver.plate_number ?? "");
+      setDeliveryArea(driver.delivery_area ?? "");
+      setStartLocation(driver.start_location ?? "");
+      setEndLocation(driver.end_location ?? "");
     };
     loadDriver();
   }, [driverId]);
@@ -658,31 +661,38 @@ export default function ReportNewPage() {
               <Card>
                 <div className="space-y-3">
                   <FormSection icon={<Van size={24} />} title="走行情報" />
-                  <Input
-                    label="配送エリア"
-                    type="text"
-                    value={deliveryArea}
-                    onChange={(e) => setDeliveryArea(e.target.value)}
-                  />
+                  <div>
+                    <label className="block text-sm text-gray-500 mb-1">
+                      配送エリア
+                    </label>
+                    <div className="rounded-lg text-gray-500 bg-slate-100 px-4 py-3 flex items-center">
+                      {deliveryArea}
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <Input
-                      label="出発場所"
-                      type="text"
-                      value={startLocation}
-                      onChange={(e) => setStartLocation(e.target.value)}
-                    />
+                    <div>
+                      <label className="block text-sm text-gray-500 mb-1">
+                        出発場所
+                      </label>
+                      <div className="rounded-lg text-gray-500 bg-slate-100 px-4 py-3 flex items-center">
+                        {startLocation}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-500 mb-1">
+                        帰着場所
+                      </label>
+                      <div className="rounded-lg text-gray-500 bg-slate-100 px-4 py-3 flex items-center">
+                        {endLocation}
+                      </div>
+                    </div>
+
                     <Input
                       label="出庫メーター"
                       type="number"
                       value={odometerStart}
                       suffix="km"
                       onChange={(e) => setOdometerStart(e.target.value)}
-                    />
-                    <Input
-                      label="帰着場所"
-                      type="text"
-                      value={endLocation}
-                      onChange={(e) => setEndLocation(e.target.value)}
                     />
                     <Input
                       label="帰庫メーター"

@@ -28,6 +28,9 @@ type Driver = {
   address?: string;
   birth_date?: string;
   vehicle_type?: string;
+  delivery_area?: string;
+  start_location?: string;
+  end_location?: string;
   plate_number?: string;
   project?: string;
   project_start_date?: string;
@@ -193,6 +196,9 @@ export default function EditDriver() {
         birth_date: birthDate || null,
         vehicle_type: driver.vehicle_type,
         plate_number: driver.plate_number,
+        delivery_area: driver.delivery_area,
+        start_location: driver.start_location,
+        end_location: driver.end_location,
         project_id: driver.project_id,
         project_start_date: driver.project_start_date,
         status: driver.status,
@@ -349,6 +355,21 @@ export default function EditDriver() {
                   label="開始日"
                   value={driver.project_start_date || ""}
                   onChange={(e) => update("project_start_date", e.target.value)}
+                />
+                <Input
+                  label="配送エリア"
+                  value={driver.delivery_area || ""}
+                  onChange={(e) => update("delivery_area", e.target.value)}
+                />
+                <Input
+                  label="出発場所"
+                  value={driver.start_location || ""}
+                  onChange={(e) => update("start_location", e.target.value)}
+                />
+                <Input
+                  label="帰着場所"
+                  value={driver.end_location || ""}
+                  onChange={(e) => update("end_location", e.target.value)}
                 />
               </Card>
 
