@@ -79,11 +79,13 @@ export default function ReportEditPage() {
   const selectedProject = projects.find((p) => p.id === projectId);
   const unitPrice = selectedProject?.current_unit_price ?? 0;
   const sales = deliveryCount * unitPrice;
+  const isShein = projectName === "SHEIN";
   const [plateNumber, setPlateNumber] = useState("");
   const params = useParams();
   const reportId = Number(params.id);
   const [absenceReason, setAbsenceReason] = useState("");
   const distance = Math.max(odometerEnd - odometerStart, 0);
+  const [returnedDeliveryCount, setReturnedDeliveryCount] = useState("");
 
   // -----------------------------
   // 初期ロード
@@ -162,6 +164,7 @@ export default function ReportEditPage() {
       setProjectId(data.project_id);
       setDate(data.report_date);
       setDeliveryCount(data.delivery_count ?? 0);
+      setReturnedDeliveryCount(data.returned_delivery_count ?? 0);
       setDeliveryArea(data.delivery_area ?? "");
       setStartLocation(data.start_location ?? "");
       setEndLocation(data.end_location ?? "");
@@ -754,6 +757,15 @@ export default function ReportEditPage() {
                     <span>¥{sales.toLocaleString()}</span>
                   </div>
                 </div>
+                {isShein && (
+                  <Input
+                    label="不在持ち帰り件数"
+                    type="number"
+                    value={returnedDeliveryCount}
+                    suffix="件"
+                    onChange={(e) => setReturnedDeliveryCount(e.target.value)}
+                  />
+                )}
                 <Input
                   label="伝票枚数"
                   type="number"

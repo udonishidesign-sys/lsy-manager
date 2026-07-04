@@ -74,6 +74,7 @@ export default function ReportNewPage() {
   const [alcoholCheckImageUrl, setAlcoholCheckImageUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [driverError, setDriverError] = useState("");
+  const [returnedDeliveryCount, setReturnedDeliveryCount] = useState("");
 
   // -----------------------------
   // セッション取得
@@ -256,7 +257,9 @@ export default function ReportNewPage() {
       project_id: projectId,
       plate_number: plateNumber || null,
       report_date: date,
-      delivery_count: workStatus === "欠勤" ? 0 : Number(deliveryCount || 0),
+      delivery_count: Number(deliveryCount || 0),
+      returned_delivery_count:
+        workStatus === "欠勤" ? 0 : Number(returnedDeliveryCount || 0),
       delivery_area: workStatus === "欠勤" ? null : deliveryArea || null,
       unit_price: unitPrice,
       work_status: workStatus,
@@ -356,6 +359,7 @@ export default function ReportNewPage() {
     Number(odometerEnd || 0) - Number(odometerStart || 0),
     0,
   );
+  const isShein = projectName === "SHEIN";
 
   if (loading) {
     return (
@@ -767,6 +771,15 @@ export default function ReportNewPage() {
                     <span>¥{sales.toLocaleString()}</span>
                   </div>
                 </div>
+                {isShein && (
+                  <Input
+                    label="不在持ち帰り件数"
+                    type="number"
+                    value={returnedDeliveryCount}
+                    suffix="件"
+                    onChange={(e) => setReturnedDeliveryCount(e.target.value)}
+                  />
+                )}
                 <Input
                   label="伝票枚数"
                   type="number"

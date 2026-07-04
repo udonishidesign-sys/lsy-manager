@@ -24,6 +24,7 @@ type Report = {
   project_id: number;
   plate_number: string | null;
   delivery_count: number;
+  returned_delivery_count: number | null;
   delivery_area: string | null;
   unit_price: number;
   work_status: string;
@@ -114,6 +115,7 @@ export default function ReportDetailPage() {
 
   const sales = (report.delivery_count ?? 0) * (report.unit_price ?? 0);
   const mileage = (report.odometer_end ?? 0) - (report.odometer_start ?? 0);
+  const isShein = projectName === "SHEIN";
 
   function DetailField({
     label,
@@ -303,6 +305,12 @@ export default function ReportDetailPage() {
                   <span>{formatYen(sales)}</span>
                 </div>
               </div>
+              {isShein && (
+                <DetailField
+                  label="不在持ち帰り件数"
+                  value={`${report.returned_delivery_count ?? 0}件`}
+                />
+              )}
               <DetailField
                 label="伝票枚数"
                 value={`${report.carry_out_am ?? 0}枚`}
