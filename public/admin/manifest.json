@@ -2,6 +2,7 @@
   "name": "LSY Manager",
   "short_name": "LSY管理画面",
   "start_url": "/dashboard",
+  "scope": "/admin/",
   "display": "standalone",
   "background_color": "#fff",
   "theme_color": "#14b8a6",
