@@ -157,9 +157,6 @@ export default function ReportNewPage() {
 
       if (!data) return;
       setDeliveryCount(data.delivery_count ?? "");
-      setDeliveryArea(data.delivery_area ?? "");
-      setStartLocation(data.start_location ?? "");
-      setEndLocation(data.end_location ?? "");
       setCollectionCount(data.collection_count ?? 0);
       setWorkStatus(data.work_status ?? "");
       setNote(data.note ?? "");

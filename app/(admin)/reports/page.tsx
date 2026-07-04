@@ -21,6 +21,7 @@ type Report = {
   project_id: number;
   report_date: string;
   delivery_count: number;
+  delivery_area: string | null;
   unit_price: number;
   work_status: string;
   note: string | null;
@@ -221,7 +222,12 @@ export default function ReportsPage() {
                         <Package size={24} className="text-teal-500" />
                         <span>配送数</span>
                       </label>{" "}
-                      {r.delivery_count}個
+                      <span>
+                        {r.delivery_count}個
+                        {r.delivery_area && (
+                          <span className="block text-xs text-gray-400">{r.delivery_area}</span>
+                        )}
+                      </span>
                     </p>
 
                     <p className="text-gray-600 w-full md:w-1/7 text-left text-lg flex justify-between border-b border-dotted border-mist-200 md:border-none !py-2">

@@ -13,7 +13,6 @@ import {
   ClipboardPen,
   Package,
   Van,
-  FileText,
   Clock,
   CircleCheckBig,
   ChevronDown,
@@ -23,7 +22,7 @@ type Report = {
   id: number;
   report_date: string;
   project_id: number;
-  vehicle_number: string | null;
+  plate_number: string | null;
   delivery_count: number;
   delivery_area: string | null;
   unit_price: number;
@@ -71,6 +70,10 @@ export default function ReportDetailPage() {
   const reportId = Number(params.id);
   const [report, setReport] = useState<Report | null>(null);
   const [projectName, setProjectName] = useState("");
+  const [plateNumber, setPlateNumber] = useState("");
+  const [deliveryArea, setDeliveryArea] = useState("");
+  const [startLocation, setStartLocation] = useState("");
+  const [endLocation, setEndLocation] = useState("");
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -91,6 +94,10 @@ export default function ReportDetailPage() {
         .eq("id", data.project_id)
         .single();
       setProjectName(project?.name ?? "不明");
+      setPlateNumber(data.plate_number ?? "");
+      setDeliveryArea(data.delivery_area ?? "");
+      setStartLocation(data.start_location ?? "");
+      setEndLocation(data.end_location ?? "");
     };
 
     fetchReport();
@@ -146,7 +153,7 @@ export default function ReportDetailPage() {
           <DetailField label="案件" value={projectName} />
           <DetailField
             label="車両ナンバー"
-            value={report.vehicle_number ?? "未登録"}
+            value={report.plate_number ?? "未登録"}
           />
           <DetailField label="日付" value={report.report_date} />
           <DetailField label="出勤区分" value={report.work_status} />
@@ -233,12 +240,12 @@ export default function ReportDetailPage() {
                   value={report.start_location ?? "-"}
                 />
                 <DetailField
-                  label="出庫メーター"
-                  value={`${report.odometer_start ?? 0}km`}
-                />
-                <DetailField
                   label="帰着場所"
                   value={report.end_location ?? "-"}
+                />
+                <DetailField
+                  label="出庫メーター"
+                  value={`${report.odometer_start ?? 0}km`}
                 />
                 <DetailField
                   label="帰庫メーター"

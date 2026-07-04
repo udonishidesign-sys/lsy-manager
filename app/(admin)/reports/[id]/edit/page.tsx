@@ -35,15 +35,19 @@ export default function ReportEditPage() {
 
   const [driverName, setDriverName] = useState("");
   const [projectName, setProjectName] = useState("");
+  const [plateNumber, setPlateNumber] = useState("");
 
   const [reportDate, setReportDate] = useState("");
   const [workStatus, setWorkStatus] = useState<WorkStatus>("");
   const [deliveryCount, setDeliveryCount] = useState(0);
+  const [deliveryArea, setDeliveryArea] = useState("");
   const [unitPrice, setUnitPrice] = useState(0);
   const [note, setNote] = useState("");
 
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [startLocation, setStartLocation] = useState("");
+  const [endLocation, setEndLocation] = useState("");
   const [breakStart, setBreakStart] = useState("");
   const [breakEnd, setBreakEnd] = useState("");
 
@@ -106,11 +110,14 @@ export default function ReportEditPage() {
       setReportDate(data.report_date ?? "");
       setWorkStatus(data.work_status ?? "");
       setDeliveryCount(data.delivery_count ?? 0);
+      setDeliveryArea(data.delivery_area ?? "");
       setUnitPrice(data.unit_price ?? 0);
       setNote(data.note ?? "");
 
       setStartTime(formatTimeValue(data.start_time));
       setEndTime(formatTimeValue(data.end_time));
+      setStartLocation(data.start_location ?? "");
+      setEndLocation(data.end_location ?? "");
       setBreakStart(formatTimeValue(data.break_start));
       setBreakEnd(formatTimeValue(data.break_end));
 
@@ -151,7 +158,7 @@ export default function ReportEditPage() {
 
       const { data: driver } = await supabase
         .from("drivers")
-        .select("name")
+        .select("name,vehicle_number")
         .eq("id", data.driver_id)
         .single();
 
@@ -162,6 +169,7 @@ export default function ReportEditPage() {
         .single();
 
       setDriverName(driver?.name ?? "不明");
+      setPlateNumber(driver?.vehicle_number ?? "");
       setProjectName(project?.name ?? "不明");
       setLoading(false);
     };
@@ -182,10 +190,14 @@ export default function ReportEditPage() {
       .update({
         report_date: reportDate,
         delivery_count: deliveryCount,
+        plate_number: plateNumber || null,
+        delivery_area: deliveryArea || null,
         unit_price: unitPrice,
         work_status: workStatus,
         start_time: startTime || null,
         end_time: endTime || null,
+        start_location: startLocation || null,
+        end_location: endLocation || null,
         break_start: breakStart || null,
         break_end: breakEnd || null,
         odometer_start: odometerStart,
@@ -254,6 +266,14 @@ export default function ReportEditPage() {
               <h1 className="text-3xl font-bold text-slate-900">
                 {driverName}
               </h1>
+              {plateNumber && (
+                <div className="text-sm text-slate-500">
+                  車両ナンバー:{" "}
+                  <span className="font-semibold text-slate-700">
+                    {plateNumber}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex gap-3 hidden md:block">
               <Button
@@ -317,13 +337,13 @@ export default function ReportEditPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <Input
-                    label="出庫時間"
+                    label="業務開始時間"
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                   />
                   <Input
-                    label="帰庫時間"
+                    label="業務終了時間"
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
@@ -442,14 +462,31 @@ export default function ReportEditPage() {
             <div className="space-y-4">
               <Card className="border border-mist-200">
                 <FormSection icon={<Van size={24} />} title="走行情報" />
-
+                <Input
+                  label="配送エリア"
+                  type="text"
+                  value={deliveryArea}
+                  onChange={(e) => setDeliveryArea(e.target.value)}
+                />
                 <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="出発場所"
+                    type="text"
+                    value={startLocation}
+                    onChange={(e) => setStartLocation(e.target.value)}
+                  />
                   <Input
                     label="出庫メーター"
                     type="number"
                     value={odometerStart}
                     suffix="km"
                     onChange={(e) => setOdometerStart(Number(e.target.value))}
+                  />
+                  <Input
+                    label="帰ってきた場所"
+                    type="text"
+                    value={endLocation}
+                    onChange={(e) => setEndLocation(e.target.value)}
                   />
                   <Input
                     label="帰庫メーター"
@@ -510,27 +547,7 @@ export default function ReportEditPage() {
               </Card>
 
               <Card className="border border-mist-200">
-                <FormSection icon={<Clock size={24} />} title="配達完了時間" />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label="AM便"
-                    type="time"
-                    value={lastDeliveryAm}
-                    onChange={(e) => setLastDeliveryAm(e.target.value)}
-                  />
-                  <Input
-                    label="PM便"
-                    type="time"
-                    value={lastDeliveryPm}
-                    onChange={(e) => setLastDeliveryPm(e.target.value)}
-                  />
-                </div>
-              </Card>
-
-              <Card className="border border-mist-200">
                 <FormSection icon={<Package size={24} />} title="配送実績" />
-
                 <Input
                   label="配達完了件数"
                   type="number"

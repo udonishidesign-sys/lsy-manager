@@ -34,10 +34,10 @@ export default function ReportEditPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState<number | null>(null);
   const [projectName, setProjectName] = useState("");
-  const [vehicleNumber, setVehicleNumber] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [deliveryCount, setDeliveryCount] = useState(0);
   const [deliveryArea, setDeliveryArea] = useState("");
+
   const [startLocation, setStartLocation] = useState("");
   const [endLocation, setEndLocation] = useState("");
   const [workStatus, setWorkStatus] = useState<"出勤" | "欠勤" | "">("");
@@ -79,7 +79,7 @@ export default function ReportEditPage() {
   const selectedProject = projects.find((p) => p.id === projectId);
   const unitPrice = selectedProject?.current_unit_price ?? 0;
   const sales = deliveryCount * unitPrice;
-  const [vehicleCheck, setVehicleCheck] = useState(false);
+  const [plateNumber, setPlateNumber] = useState("");
   const params = useParams();
   const reportId = Number(params.id);
   const [absenceReason, setAbsenceReason] = useState("");
@@ -118,6 +118,7 @@ export default function ReportEditPage() {
         .eq("id", driverId)
         .single();
       if (!driver) return;
+
       const { data: project } = await supabase
         .from("projects")
         .select("id,name,current_unit_price")
@@ -126,7 +127,10 @@ export default function ReportEditPage() {
       if (!project) return;
       setProjectId(project.id);
       setProjectName(project.name);
-      setVehicleNumber(driver.vehicle_number ?? "");
+      setPlateNumber(driver.plate_number ?? "");
+      setDeliveryArea(driver.delivery_area ?? "");
+      setStartLocation(driver.start_location ?? "");
+      setEndLocation(driver.end_location ?? "");
     };
     loadDriver();
   }, [driverId]);
@@ -197,6 +201,7 @@ export default function ReportEditPage() {
       setAlcoholCheckTime(data.alcohol_check_time ?? "");
       setAlcoholCheckImageUrl(data.alcohol_check_image_url ?? "");
       setAbsenceReason(data.absence_reason ?? "");
+      setPlateNumber(data.plate_number ?? "");
     };
 
     loadReport();
@@ -268,7 +273,7 @@ export default function ReportEditPage() {
     const reportData = {
       driver_id: driverId,
       project_id: projectId,
-      vehicle_number: vehicleNumber || null,
+      plate_number: plateNumber || null,
       report_date: date,
       delivery_count: workStatus === "欠勤" ? 0 : deliveryCount,
       delivery_area: workStatus === "欠勤" ? null : deliveryArea || null,
@@ -387,7 +392,7 @@ export default function ReportEditPage() {
                 車両ナンバー
               </label>
               <div className="rounded-lg text-gray-500 bg-slate-100 px-4 py-3 flex items-center">
-                {vehicleNumber || "未登録"}
+                {plateNumber || "未登録"}
               </div>
             </div>
 
@@ -641,19 +646,31 @@ export default function ReportEditPage() {
               <Card>
                 <div className="space-y-3">
                   <FormSection icon={<Van size={24} />} title="走行情報" />
-                  <Input
-                    label="配送エリア"
-                    type="text"
-                    value={deliveryArea}
-                    onChange={(e) => setDeliveryArea(e.target.value)}
-                  />
+                  <div>
+                    <label className="block text-sm text-gray-500 mb-1">
+                      配送エリア
+                    </label>
+                    <div className="rounded-lg text-gray-500 bg-slate-100 px-4 py-3 flex items-center">
+                      {deliveryArea}
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <Input
-                      label="出発場所"
-                      type="text"
-                      value={startLocation}
-                      onChange={(e) => setStartLocation(e.target.value)}
-                    />
+                    <div>
+                      <label className="block text-sm text-gray-500 mb-1">
+                        出発場所
+                      </label>
+                      <div className="rounded-lg text-gray-500 bg-slate-100 px-4 py-3 flex items-center">
+                        {startLocation}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-500 mb-1">
+                        帰着場所
+                      </label>
+                      <div className="rounded-lg text-gray-500 bg-slate-100 px-4 py-3 flex items-center">
+                        {endLocation}
+                      </div>
+                    </div>
                     <Input
                       label="出庫メーター"
                       type="number"
@@ -661,12 +678,7 @@ export default function ReportEditPage() {
                       suffix="km"
                       onChange={(e) => setOdometerStart(Number(e.target.value))}
                     />
-                    <Input
-                      label="帰着場所"
-                      type="text"
-                      value={endLocation}
-                      onChange={(e) => setEndLocation(e.target.value)}
-                    />
+
                     <Input
                       label="帰庫メーター"
                       type="number"

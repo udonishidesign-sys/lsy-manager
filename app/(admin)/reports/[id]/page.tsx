@@ -25,14 +25,18 @@ type Report = {
   id: number;
   driver_id: number;
   project_id: number;
+  plate_number: string | null;
   report_date: string;
   delivery_count: number;
+  delivery_area: string | null;
   unit_price: number;
   note: string | null;
   work_status: "出勤" | "欠勤" | null;
   attachment_url: string | null;
   start_time: string | null;
   end_time: string | null;
+  start_location: string | null;
+  end_location: string | null;
   break_start: string | null;
   break_end: string | null;
   odometer_start: number | null;
@@ -77,7 +81,8 @@ export default function ReportDetailPage() {
   const [driverName, setDriverName] = useState("");
   const [projectName, setProjectName] = useState("");
   const [workStatus, setworkStatus] = useState("");
-
+  const [plateNumber, setPlateNumber] = useState("");
+  const [deliveryArea, setDeliveryArea] = useState("");
   // ----------------------------
   // データ取得
   // ----------------------------
@@ -113,6 +118,8 @@ export default function ReportDetailPage() {
 
       setDriverName(driverData?.name ?? "不明");
       setProjectName(projectData?.name ?? "不明");
+      setPlateNumber(data.plate_number ?? "");
+      setDeliveryArea(data.delivery_area ?? "");
     };
 
     fetchData();
@@ -224,13 +231,17 @@ export default function ReportDetailPage() {
                   title="勤務情報"
                 />
                 <DetailRow label="案件" value={projectName} />
+                <DetailRow
+                  label="車両ナンバー"
+                  value={report.plate_number ?? "未登録"}
+                />
                 <div className="grid grid-cols-2 gap-6">
                   <DetailRow
-                    label="出庫時間"
+                    label="業務開始時間"
                     value={formatTime(report.start_time)}
                   />
                   <DetailRow
-                    label="帰庫時間"
+                    label="業務終了時間"
                     value={formatTime(report.end_time)}
                   />
                 </div>
@@ -275,10 +286,22 @@ export default function ReportDetailPage() {
 
               <Card className="border border-mist-200">
                 <FormSection icon={<Van size={24} />} title="走行情報" />
+                <DetailRow
+                  label="配送エリア"
+                  value={report.delivery_area ?? "-"}
+                />
                 <div className="grid grid-cols-2 gap-6">
+                  <DetailRow
+                    label="出発場所"
+                    value={report.start_location ?? "-"}
+                  />
                   <DetailRow
                     label="出庫メーター"
                     value={`${report.odometer_start ?? 0}km`}
+                  />
+                  <DetailRow
+                    label="帰ってきた場所"
+                    value={report.end_location ?? "-"}
                   />
                   <DetailRow
                     label="帰庫メーター"
@@ -326,22 +349,7 @@ export default function ReportDetailPage() {
               </Card>
 
               <Card className="border border-mist-200">
-                <FormSection icon={<Clock size={24} />} title="配達完了時間" />
-                <div className="grid grid-cols-2 gap-6">
-                  <DetailRow
-                    label="AM便"
-                    value={formatTime(report.last_delivery_am)}
-                  />
-                  <DetailRow
-                    label="PM便"
-                    value={formatTime(report.last_delivery_pm)}
-                  />
-                </div>
-              </Card>
-
-              <Card className="border border-mist-200">
                 <FormSection icon={<Package size={24} />} title="配送実績" />
-
                 <DetailRow
                   label="配達完了件数"
                   value={`${(report.delivery_count ?? 0).toLocaleString()} 件`}
