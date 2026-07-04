@@ -484,7 +484,7 @@ export default function ReportEditPage() {
                     onChange={(e) => setOdometerStart(Number(e.target.value))}
                   />
                   <Input
-                    label="帰ってきた場所"
+                    label="帰着場所"
                     type="text"
                     value={endLocation}
                     onChange={(e) => setEndLocation(e.target.value)}

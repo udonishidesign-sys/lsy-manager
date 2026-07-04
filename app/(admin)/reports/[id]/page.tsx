@@ -307,7 +307,7 @@ export default function ReportDetailPage() {
                   />
 
                   <DetailRow
-                    label="帰ってきた場所"
+                    label="帰着場所"
                     value={report.end_location ?? "-"}
                   />
                   <DetailRow
