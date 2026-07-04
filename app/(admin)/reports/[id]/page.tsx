@@ -28,6 +28,7 @@ type Report = {
   plate_number: string | null;
   report_date: string;
   delivery_count: number;
+  returned_delivery_count: number;
   delivery_area: string | null;
   unit_price: number;
   note: string | null;
@@ -142,6 +143,7 @@ export default function ReportDetailPage() {
     (report.odometer_end ?? 0) - (report.odometer_start ?? 0),
     0,
   );
+  const isShein = projectName === "SHEIN";
   const checked = (value: boolean | null) => (value ? "済" : "未確認");
 
   // ----------------------------
@@ -211,7 +213,7 @@ export default function ReportDetailPage() {
                 </h1>
               </div>
             </div>
-            <div className="flex gap-3">
+            {/* <div className="flex gap-3">
               <PageActions
                 actions={[
                   {
@@ -223,7 +225,7 @@ export default function ReportDetailPage() {
                 ]}
               />
               <Button variant="delete" onClick={deleteReport} iconOnly></Button>
-            </div>
+            </div> */}
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-4">
@@ -366,6 +368,12 @@ export default function ReportDetailPage() {
                     <span>{formatYen(sales)}</span>
                   </div>
                 </div>
+                {isShein && (
+                  <DetailRow
+                    label="不在持ち帰り件数"
+                    value={`${report.returned_delivery_count ?? 0}件`}
+                  />
+                )}
                 <DetailRow
                   label="伝票枚数"
                   value={`${(report.carry_out_am ?? 0).toLocaleString()} 件`}

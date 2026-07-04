@@ -88,6 +88,7 @@ export default function ReportEditPage() {
 
   const sales = deliveryCount * unitPrice;
   const distance = Math.max(odometerEnd - odometerStart, 0);
+  const isShein = projectName === "SHEIN";
 
   useEffect(() => {
     if (!id) return;
@@ -189,6 +190,7 @@ export default function ReportEditPage() {
       .from("daily_reports")
       .update({
         report_date: reportDate,
+        driver_name: driverName,
         delivery_count: deliveryCount,
         plate_number: plateNumber || null,
         delivery_area: deliveryArea || null,
@@ -262,7 +264,6 @@ export default function ReportEditPage() {
         <Card className="space-y-4 p-3 md:p-6 bg-white/50">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <div className="text-slate-500">{projectName}</div>
               <h1 className="text-3xl font-bold text-slate-900">
                 {driverName}
               </h1>
@@ -556,17 +557,13 @@ export default function ReportEditPage() {
                   disabled={workStatus === "欠勤"}
                   onChange={(e) => setDeliveryCount(Number(e.target.value))}
                 />
-
-                <Input
-                  label="単価"
-                  type="number"
-                  value={unitPrice}
-                  suffix="円"
-                  onChange={(e) => setUnitPrice(Number(e.target.value))}
-                />
-
                 <div className="bg-slate-100 rounded-lg p-3">
                   <div className="flex justify-between text-slate-700">
+                    <span>単価</span>
+                    <span>¥{unitPrice}</span>
+                  </div>
+
+                  <div className="flex justify-between font-semibold mt-2 text-slate-700">
                     <span>売上</span>
                     <span className="font-bold">¥{sales.toLocaleString()}</span>
                   </div>

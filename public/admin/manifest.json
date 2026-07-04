@@ -1,23 +1,23 @@
 {
-  "name": "LSY Driver",
-  "short_name": "LSY日報管理",
-  "start_url": "/",
+  "name": "LSY Manager",
+  "short_name": "LSY管理画面",
+  "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#fff",
   "theme_color": "#14b8a6",
   "icons": [
     {
-      "src": "/driver-icon-192.png",
+      "src": "/admin/admin-icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/driver-icon-180.png",
+      "src": "/admin/admin-icon-180.png",
       "sizes": "180x180",
       "type": "image/png"
     },
     {
-      "src": "/driver-icon-512.png",
+      "src": "/admin/admin-icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
