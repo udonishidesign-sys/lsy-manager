@@ -765,11 +765,6 @@ export default function ReportNewPage() {
                     <span>単価</span>
                     <span>¥{unitPrice.toLocaleString()}</span>
                   </div>
-
-                  <div className="flex justify-between font-semibold mt-2 text-slate-700">
-                    <span>売上</span>
-                    <span>¥{sales.toLocaleString()}</span>
-                  </div>
                 </div>
                 {isShein && (
                   <Input

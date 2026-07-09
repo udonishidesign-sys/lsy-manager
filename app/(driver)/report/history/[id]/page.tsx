@@ -300,10 +300,6 @@ export default function ReportDetailPage() {
                   <span>単価</span>
                   <span>{formatYen(report.unit_price ?? 0)}</span>
                 </div>
-                <div className="flex justify-between font-semibold mt-2 text-slate-700">
-                  <span>売上</span>
-                  <span>{formatYen(sales)}</span>
-                </div>
               </div>
               {isShein && (
                 <DetailField

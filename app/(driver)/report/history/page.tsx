@@ -80,7 +80,7 @@ export default function ReportHistoryPage() {
                     </div>
 
                     <p className="text-sm text-gray-500">
-                      配送 {r.delivery_count}個 / 売上 {formatYen(sales)}
+                      配送 {r.delivery_count}個
                     </p>
                     {r.delivery_area && (
                       <p className="text-xs text-gray-400">
