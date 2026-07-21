@@ -10,6 +10,7 @@ import Input from "@/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 import PageTitle from "@/components/ui/PageTitle";
 import FormSection from "@/components/ui/FormSection";
+import TimeSelect from "@/components/ui/TimeSelect";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PageActions from "@/components/ui/PageActions";
 import {
@@ -337,6 +338,17 @@ export default function ReportEditPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
+                  <TimeSelect
+                    label="業務開始時間"
+                    hour={startTime.split(":")[0]}
+                    minute={startTime.split(":")[1]}
+                    onHourChange={(hour) =>
+                      setStartTime(`${hour}:${startTime.split(":")[1]}`)
+                    }
+                    onMinuteChange={(minute) =>
+                      setStartTime(`${breakStart.split(":")[0]}:${minute}`)
+                    }
+                  />
                   <Input
                     label="業務開始時間"
                     type="time"

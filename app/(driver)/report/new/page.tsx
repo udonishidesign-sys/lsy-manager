@@ -27,6 +27,7 @@ export default function ReportNewPage() {
   const router = useRouter();
   const [driverId, setDriverId] = useState<number | null>(null);
   const [projectId, setProjectId] = useState<number | null>(null);
+  const [availableProjects, setAvailableProjects] = useState<any[]>([]);
   const [projectName, setProjectName] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -124,15 +125,48 @@ export default function ReportNewPage() {
         .eq("id", driverId)
         .single();
       if (!driver) return;
-      const { data: project } = await supabase
-        .from("projects")
-        .select("id,name,current_unit_price")
-        .eq("id", driver.project_id)
-        .single();
-      if (!project) return;
-      setProjectId(project.id);
-      setProjectName(project.name);
-      setUnitPrice(project.current_unit_price);
+      // 新しい案件紐付けを確認
+      const { data: driverProjects } = await supabase
+        .from("driver_projects")
+        .select(
+          `
+  project_id,
+  projects (
+    id,
+    name,
+    current_unit_price
+  )
+`,
+        )
+        .eq("driver_id", driverId);
+
+      if (driverProjects && driverProjects.length > 0) {
+        const projects = driverProjects.map((item: any) => item.projects);
+
+        setAvailableProjects(projects);
+
+        console.log("availableProjects", projects);
+
+        // 1件だけなら固定表示
+        if (projects.length === 1) {
+          setProjectId(projects[0].id);
+          setProjectName(projects[0].name);
+          setUnitPrice(projects[0].current_unit_price);
+        }
+      } else {
+        // 旧方式（drivers.project_id）
+        const { data: project } = await supabase
+          .from("projects")
+          .select("id,name,current_unit_price")
+          .eq("id", driver.project_id)
+          .single();
+
+        if (!project) return;
+
+        setProjectId(project.id);
+        setProjectName(project.name);
+        setUnitPrice(project.current_unit_price);
+      }
       setPlateNumber(driver.plate_number ?? "");
       setDeliveryArea(driver.delivery_area ?? "");
       setStartLocation(driver.start_location ?? "");
@@ -398,9 +432,33 @@ export default function ReportNewPage() {
             <FormSection icon={<ClipboardPen size={24} />} title="勤務情報" />
             <div>
               <label className="block text-sm text-gray-500 mb-1">案件</label>
-              <div className="rounded-lg text-gray-500 bg-slate-100 px-4 py-3 flex items-center">
-                {projectName}
-              </div>
+              {availableProjects.length > 1 ? (
+                <select
+                  value={projectId ?? ""}
+                  onChange={(e) => {
+                    const selected = availableProjects.find(
+                      (p) => p.id === Number(e.target.value),
+                    );
+
+                    if (!selected) return;
+
+                    setProjectId(selected.id);
+                    setProjectName(selected.name);
+                    setUnitPrice(selected.current_unit_price);
+                  }}
+                  className="rounded-lg bg-slate-100 px-4 py-3 w-full"
+                >
+                  {availableProjects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="rounded-lg text-gray-500 bg-slate-100 px-4 py-3 flex items-center">
+                  {projectName}
+                </div>
+              )}
             </div>
 
             <div>
@@ -485,7 +543,6 @@ export default function ReportNewPage() {
                     icon={<ClipboardPen size={24} />}
                     title="アルコールチェック"
                   />
-
                   <Input
                     label="チェック時間"
                     type="time"
