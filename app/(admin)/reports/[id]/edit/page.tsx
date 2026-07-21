@@ -353,10 +353,8 @@ export default function ReportEditPage() {
                   />
                   <CustomTimePicker
                     label="休憩開始"
-                    value={breakStart ? dayjs(breakStart, "HH:mm") : null}
-                    onChange={(value) =>
-                      setBreakStart(value ? value.format("HH:mm") : "")
-                    }
+                    value={breakStart}
+                    onChange={setBreakStart}
                   />
                   <Input
                     label="休憩終了"
