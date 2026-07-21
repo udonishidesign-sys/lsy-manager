@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import dayjs from "dayjs";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 import PageTitle from "@/components/ui/PageTitle";
 import FormSection from "@/components/ui/FormSection";
-import TimeSelect from "@/components/ui/TimeSelect";
+import CustomTimePicker from "@/components/ui/CustomTimePicker";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PageActions from "@/components/ui/PageActions";
 import {
@@ -338,17 +339,6 @@ export default function ReportEditPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <TimeSelect
-                    label="業務開始時間"
-                    hour={startTime.split(":")[0]}
-                    minute={startTime.split(":")[1]}
-                    onHourChange={(hour) =>
-                      setStartTime(`${hour}:${startTime.split(":")[1]}`)
-                    }
-                    onMinuteChange={(minute) =>
-                      setStartTime(`${breakStart.split(":")[0]}:${minute}`)
-                    }
-                  />
                   <Input
                     label="業務開始時間"
                     type="time"
@@ -361,11 +351,12 @@ export default function ReportEditPage() {
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                   />
-                  <Input
+                  <CustomTimePicker
                     label="休憩開始"
-                    type="time"
-                    value={breakStart}
-                    onChange={(e) => setBreakStart(e.target.value)}
+                    value={breakStart ? dayjs(breakStart, "HH:mm") : null}
+                    onChange={(value) =>
+                      setBreakStart(value ? value.format("HH:mm") : "")
+                    }
                   />
                   <Input
                     label="休憩終了"
