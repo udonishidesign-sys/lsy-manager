@@ -10,6 +10,7 @@ import Input from "@/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 import PageTitle from "@/components/ui/PageTitle";
 import PageActions from "@/components/ui/PageActions";
+import CustomTimeSelect from "@/components/ui/CustomTimeSelect";
 import { getDriverSessionId, setDriverSessionId } from "@/lib/driver-session";
 import { findDriverIdForUser } from "@/lib/driver-auth";
 import {
@@ -543,11 +544,10 @@ export default function ReportNewPage() {
                     icon={<ClipboardPen size={24} />}
                     title="アルコールチェック"
                   />
-                  <Input
+                  <CustomTimeSelect
                     label="チェック時間"
-                    type="time"
                     value={alcoholCheckTime}
-                    onChange={(e) => setAlcoholCheckTime(e.target.value)}
+                    onChange={setAlcoholCheckTime}
                   />
 
                   <div className="grid grid-cols-2 gap-3">
@@ -773,32 +773,28 @@ export default function ReportNewPage() {
               <Card>
                 <FormSection icon={<Clock size={24} />} title="勤務時間" />
                 <div className="space-y-3">
-                  <Input
+                  <CustomTimeSelect
                     label="業務開始時間"
-                    type="time"
                     value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
+                    onChange={setStartTime}
                   />
 
                   <div className="grid grid-cols-2 gap-4">
-                    <Input
+                    <CustomTimeSelect
                       label="休憩開始"
-                      type="time"
                       value={breakStart}
-                      onChange={(e) => setBreakStart(e.target.value)}
+                      onChange={setBreakStart}
                     />
-                    <Input
+                    <CustomTimeSelect
                       label="休憩終了"
-                      type="time"
                       value={breakEnd}
-                      onChange={(e) => setBreakEnd(e.target.value)}
+                      onChange={setBreakEnd}
                     />
                   </div>
-                  <Input
+                  <CustomTimeSelect
                     label="業務終了時間"
-                    type="time"
                     value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
+                    onChange={setEndTime}
                   />
                 </div>
               </Card>

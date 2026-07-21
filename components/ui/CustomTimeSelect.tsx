@@ -7,7 +7,7 @@ type Props = {
 };
 
 export default function CustomTimeSelect({ label, value, onChange }: Props) {
-  const [hour, minute] = value ? value.split(":") : ["--", "--"];
+  const [hour, minute] = value ? value.split(":") : ["00", "00"];
 
   const hours = Array.from({ length: 24 }, (_, i) =>
     String(i).padStart(2, "0"),
@@ -19,7 +19,7 @@ export default function CustomTimeSelect({ label, value, onChange }: Props) {
 
   return (
     <div className="w-full">
-      <label className="mb-2 block text-sm text-slate-700">{label}</label>
+      <label className="mb-1 block text-sm text-slate-700">{label}</label>
 
       <div
         className="flex items-center gap-2 h-12

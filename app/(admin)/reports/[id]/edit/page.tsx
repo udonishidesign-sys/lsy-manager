@@ -11,7 +11,7 @@ import Input from "@/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 import PageTitle from "@/components/ui/PageTitle";
 import FormSection from "@/components/ui/FormSection";
-import CustomTimePicker from "@/components/ui/CustomTimePicker";
+import CustomTimeSelect from "@/components/ui/CustomTimeSelect";
 import StatusBadge from "@/components/ui/StatusBadge";
 import PageActions from "@/components/ui/PageActions";
 import {
@@ -351,7 +351,7 @@ export default function ReportEditPage() {
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                   />
-                  <CustomTimePicker
+                  <CustomTimeSelect
                     label="休憩開始"
                     value={breakStart}
                     onChange={setBreakStart}
