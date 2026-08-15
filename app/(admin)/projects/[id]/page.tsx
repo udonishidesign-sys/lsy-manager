@@ -17,6 +17,9 @@ export default function EditProjectPage() {
   const projectId = Number(params.id);
   const [name, setName] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
+  const [deliveryArea, setDeliveryArea] = useState("");
+  const [startLocation, setStartLocation] = useState("");
+  const [endLocation, setEndLocation] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -35,6 +38,9 @@ export default function EditProjectPage() {
       }
       setName(data.name);
       setUnitPrice(String(data.current_unit_price));
+      setDeliveryArea(data.delivery_area ?? "");
+      setStartLocation(data.start_location ?? "");
+      setEndLocation(data.end_location ?? "");
       setLoading(false);
     };
 
@@ -56,6 +62,9 @@ export default function EditProjectPage() {
       .update({
         name,
         current_unit_price: Number(unitPrice),
+        delivery_area: deliveryArea,
+        start_location: startLocation,
+        end_location: endLocation,
       })
       .eq("id", projectId);
     setSaving(false);
@@ -95,6 +104,23 @@ export default function EditProjectPage() {
             type="number"
             value={unitPrice}
             onChange={(e) => setUnitPrice(e.target.value)}
+          />
+          <Input
+            label="配送エリア"
+            value={deliveryArea}
+            onChange={(e) => setDeliveryArea(e.target.value)}
+          />
+
+          <Input
+            label="出発場所"
+            value={startLocation}
+            onChange={(e) => setStartLocation(e.target.value)}
+          />
+
+          <Input
+            label="帰着場所"
+            value={endLocation}
+            onChange={(e) => setEndLocation(e.target.value)}
           />
         </Card>
         <div className="flex items-center gap-4 mt-6">

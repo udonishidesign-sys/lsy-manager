@@ -72,6 +72,7 @@ export default function EditDriver() {
   const [driver, setDriver] = useState<Driver | null>(null);
   const [birthDate, setBirthDate] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProjectIds, setSelectedProjectIds] = useState<number[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -91,9 +92,25 @@ export default function EditDriver() {
         setLoaded(true);
         return;
       }
-      const { data: projectsData } = await supabase
+
+      const { data: projectsData, error: projectsError } = await supabase
         .from("projects")
-        .select("id, name");
+        .select("id, name")
+        .order("name");
+
+      if (projectsError) {
+        console.error(projectsError);
+      }
+
+      const { data: driverProjectsData, error: driverProjectsError } =
+        await supabase
+          .from("driver_projects")
+          .select("project_id")
+          .eq("driver_id", id);
+
+      if (driverProjectsError) {
+        console.error(driverProjectsError);
+      }
 
       const { data: filesData } = await supabase
         .from("driver_files")
@@ -104,6 +121,10 @@ export default function EditDriver() {
       setLoaded(true);
       setProjects(projectsData ?? []);
       setFiles(filesData ?? []);
+
+      setSelectedProjectIds(
+        (driverProjectsData ?? []).map((item) => Number(item.project_id)),
+      );
     };
 
     fetchDriver();
@@ -186,31 +207,71 @@ export default function EditDriver() {
 
   const save = async () => {
     if (!driver) return;
-    const { error } = await supabase
-      .from("drivers")
-      .update({
-        name: driver.name,
-        phone: driver.phone,
-        email: driver.email,
-        address: driver.address,
-        birth_date: birthDate || null,
-        vehicle_type: driver.vehicle_type,
-        plate_number: driver.plate_number,
-        delivery_area: driver.delivery_area,
-        start_location: driver.start_location,
-        end_location: driver.end_location,
-        project_id: driver.project_id,
-        project_start_date: driver.project_start_date,
-        status: driver.status,
-      })
-      .eq("id", id);
 
-    if (error) {
-      alert(error.message);
-      return;
+    setLoading(true);
+
+    try {
+      // -----------------------------
+      // ドライバー情報を保存
+      // -----------------------------
+      const { error: driverError } = await supabase
+        .from("drivers")
+        .update({
+          name: driver.name,
+          phone: driver.phone,
+          email: driver.email,
+          address: driver.address,
+          birth_date: birthDate || null,
+          vehicle_type: driver.vehicle_type,
+          plate_number: driver.plate_number,
+          status: driver.status,
+        })
+        .eq("id", id);
+
+      if (driverError) {
+        throw driverError;
+      }
+
+      // -----------------------------
+      // 既存の案件紐付けを削除
+      // -----------------------------
+      const { error: deleteError } = await supabase
+        .from("driver_projects")
+        .delete()
+        .eq("driver_id", id);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      // -----------------------------
+      // 新しい案件紐付けを登録
+      // -----------------------------
+      if (selectedProjectIds.length > 0) {
+        const rows = selectedProjectIds.map((projectId) => ({
+          driver_id: id,
+          project_id: projectId,
+        }));
+
+        const { error: insertError } = await supabase
+          .from("driver_projects")
+          .insert(rows);
+
+        if (insertError) {
+          throw insertError;
+        }
+      }
+
+      alert("保存しました");
+
+      router.push(`/drivers/${id}`);
+    } catch (error) {
+      console.error(error);
+
+      alert(error instanceof Error ? error.message : "保存に失敗しました");
+    } finally {
+      setLoading(false);
     }
-
-    router.push(`/drivers/${id}`);
   };
 
   if (!loaded) return null;
@@ -330,47 +391,50 @@ export default function EditDriver() {
                   title="案件情報"
                 />
 
-                <div className="space-y-1">
+                <div className="space-y-3">
                   <label className="text-sm text-slate-500">案件</label>
 
-                  <select
-                    className="border border-teal-500 rounded-lg h-12 px-4 py-3.5 w-full text-slate-700"
-                    value={driver.project_id ?? ""}
-                    onChange={(e) =>
-                      update("project_id", Number(e.target.value))
-                    }
-                  >
-                    <option value="">選択してください</option>
+                  <div className="space-y-2">
+                    {projects.length === 0 ? (
+                      <p className="text-sm text-gray-400">
+                        登録されている案件がありません
+                      </p>
+                    ) : (
+                      projects.map((project) => (
+                        <label
+                          key={project.id}
+                          className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 cursor-pointer hover:bg-teal-50"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedProjectIds.includes(project.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedProjectIds((prev) => [
+                                  ...prev,
+                                  project.id,
+                                ]);
+                              } else {
+                                setSelectedProjectIds((prev) =>
+                                  prev.filter((id) => id !== project.id),
+                                );
+                              }
+                            }}
+                            className="w-5 h-5 accent-teal-500"
+                          />
 
-                    {projects.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
+                          <span className="text-slate-700 font-medium">
+                            {project.name}
+                          </span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+
+                  <p className="text-xs text-gray-400">
+                    複数の案件を選択できます
+                  </p>
                 </div>
-
-                <Input
-                  type="date"
-                  label="開始日"
-                  value={driver.project_start_date || ""}
-                  onChange={(e) => update("project_start_date", e.target.value)}
-                />
-                <Input
-                  label="配送エリア"
-                  value={driver.delivery_area || ""}
-                  onChange={(e) => update("delivery_area", e.target.value)}
-                />
-                <Input
-                  label="出発場所"
-                  value={driver.start_location || ""}
-                  onChange={(e) => update("start_location", e.target.value)}
-                />
-                <Input
-                  label="帰着場所"
-                  value={driver.end_location || ""}
-                  onChange={(e) => update("end_location", e.target.value)}
-                />
               </Card>
 
               <Card className="border border-mist-200">

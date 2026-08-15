@@ -26,6 +26,8 @@ export default function NewProjectPage() {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const [startLocation, setStartLocation] = useState("");
+  const [endLocation, setEndLocation] = useState("");
 
   const saveProject = async () => {
     if (!name.trim()) {
@@ -54,6 +56,8 @@ export default function NewProjectPage() {
         large_unit_price_2: Number(largeUnitPrice2 || 0),
         project_rule: projectRule || null,
         caution_note: cautionNote || null,
+        start_location: startLocation || null,
+        end_location: endLocation || null,
       },
     ]);
 
@@ -91,6 +95,16 @@ export default function NewProjectPage() {
               label="配送エリア"
               value={deliveryArea}
               onChange={(e) => setDeliveryArea(e.target.value)}
+            />
+            <Input
+              label="出発場所"
+              value={startLocation}
+              onChange={(e) => setStartLocation(e.target.value)}
+            />
+            <Input
+              label="帰着場所"
+              value={endLocation}
+              onChange={(e) => setEndLocation(e.target.value)}
             />
             <Input
               label="センター"

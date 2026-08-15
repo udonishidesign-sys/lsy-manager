@@ -105,7 +105,7 @@ export default function ReportNewPage() {
           setDriverId(driverId);
         }
       } else {
-        setDriverId(savedDriverId);
+        setDriverId(Number(savedDriverId));
       }
 
       setLoading(false);
@@ -119,59 +119,49 @@ export default function ReportNewPage() {
   // -----------------------------
   useEffect(() => {
     if (!driverId) return;
+
     const loadDriver = async () => {
       const { data: driver } = await supabase
         .from("drivers")
-        .select("*")
+        .select(
+          `
+        *,
+        driver_projects(
+          projects(*)
+        )
+      `,
+        )
         .eq("id", driverId)
         .single();
       if (!driver) return;
       // 新しい案件紐付けを確認
       const { data: driverProjects } = await supabase
         .from("driver_projects")
-        .select(
-          `
-  project_id,
-  projects (
-    id,
-    name,
-    current_unit_price
-  )
-`,
-        )
+        .select("project_id")
         .eq("driver_id", driverId);
 
-      if (driverProjects && driverProjects.length > 0) {
-        const projects = driverProjects.map((item: any) => item.projects);
+      if (!driverProjects || driverProjects.length === 0) return;
 
-        setAvailableProjects(projects);
+      const projectIds = driverProjects.map((item) => item.project_id);
 
-        console.log("availableProjects", projects);
+      const { data: projects } = await supabase
+        .from("projects")
+        .select(
+          `
+    id,
+    name,
+    current_unit_price,
+    delivery_area,
+    start_location,
+    end_location
+  `,
+        )
+        .in("id", projectIds);
+      if (!projects) return;
 
-        // 1件だけなら固定表示
-        if (projects.length === 1) {
-          setProjectId(projects[0].id);
-          setProjectName(projects[0].name);
-          setUnitPrice(projects[0].current_unit_price);
-        }
-      } else {
-        // 旧方式（drivers.project_id）
-        const { data: project } = await supabase
-          .from("projects")
-          .select("id,name,current_unit_price")
-          .eq("id", driver.project_id)
-          .single();
+      setAvailableProjects(projects);
 
-        if (!project) return;
-
-        setProjectId(project.id);
-        setProjectName(project.name);
-        setUnitPrice(project.current_unit_price);
-      }
       setPlateNumber(driver.plate_number ?? "");
-      setDeliveryArea(driver.delivery_area ?? "");
-      setStartLocation(driver.start_location ?? "");
-      setEndLocation(driver.end_location ?? "");
     };
     loadDriver();
   }, [driverId]);
@@ -179,35 +169,80 @@ export default function ReportNewPage() {
   // -----------------------------
   // 日報読み込み
   // -----------------------------
-
   useEffect(() => {
     if (!driverId) return;
 
     const loadTodayReport = async () => {
       const { data } = await supabase
         .from("daily_reports")
-        .select("*")
+        .select(
+          `
+        *,
+        projects(
+          id,
+          name,
+          current_unit_price,
+          delivery_area,
+          start_location,
+          end_location
+        )
+      `,
+        )
         .eq("driver_id", driverId)
         .eq("report_date", date)
         .maybeSingle();
 
       if (!data) return;
+
+      // -----------------------------
+      // 保存済み案件を復元
+      // -----------------------------
+      if (data.project_id) {
+        const { data: proj } = await supabase
+          .from("projects")
+          .select(
+            "id,name,current_unit_price,delivery_area,start_location,end_location",
+          )
+          .eq("id", data.project_id)
+          .single();
+
+        if (proj) {
+          setProjectId(proj.id);
+          setProjectName(proj.name);
+          setUnitPrice(String(proj.current_unit_price));
+
+          setDeliveryArea(proj.delivery_area ?? "");
+          setStartLocation(proj.start_location ?? "");
+          setEndLocation(proj.end_location ?? "");
+        }
+      }
+
+      // -----------------------------
+      // 日報データ復元
+      // -----------------------------
       setDeliveryCount(data.delivery_count ?? "");
+      setReturnedDeliveryCount(data.returned_delivery_count ?? "");
       setCollectionCount(data.collection_count ?? 0);
       setWorkStatus(data.work_status ?? "");
       setNote(data.note ?? "");
+
       setCarryOutAm(data.carry_out_am ?? 0);
       setCarryOutPm(data.carry_out_pm ?? 0);
       setCarryBackAm(data.carry_back_am ?? 0);
       setCarryBackPm(data.carry_back_pm ?? 0);
+
       setLastDeliveryAm(data.last_delivery_am ?? "");
       setLastDeliveryPm(data.last_delivery_pm ?? "");
+
       setStartTime(data.start_time ?? "");
       setEndTime(data.end_time ?? "");
+
       setBreakStart(data.break_start ?? "");
       setBreakEnd(data.break_end ?? "");
+
       setOdometerStart(data.odometer_start ?? 0);
       setOdometerEnd(data.odometer_end ?? 0);
+
       setCheckBrake(data.check_brake ?? false);
       setCheckTire(data.check_tire ?? false);
       setCheckLight(data.check_light ?? false);
@@ -225,7 +260,9 @@ export default function ReportNewPage() {
       setCheckLicensePlate(data.check_license_plate ?? false);
       setCheckVehicleInspection(data.check_vehicle_inspection ?? false);
       setCheckInsurance(data.check_insurance ?? false);
+
       setAbsenceReason(data.absence_reason ?? "");
+
       setAlcoholCheckTime(data.alcohol_check_time ?? "");
       setAlcoholCheckImageUrl(data.alcohol_check_image_url ?? "");
     };
@@ -233,11 +270,29 @@ export default function ReportNewPage() {
     loadTodayReport();
   }, [driverId, date]);
 
+  const changeProject = (id: number) => {
+    const project = availableProjects.find((item) => item.id === id);
+
+    if (!project) return;
+
+    setProjectId(project.id);
+    setProjectName(project.name);
+    setUnitPrice(String(project.current_unit_price));
+
+    setDeliveryArea(project.delivery_area ?? "");
+    setStartLocation(project.start_location ?? "");
+    setEndLocation(project.end_location ?? "");
+  };
+
   // -----------------------------
   // 保存
   // -----------------------------
   const submit = async () => {
     if (!driverId) return;
+    if (!projectId) {
+      alert("案件を選択してください");
+      return;
+    }
 
     if (!workStatus) {
       alert("出勤区分を選択してください");
@@ -437,18 +492,34 @@ export default function ReportNewPage() {
                 <select
                   value={projectId ?? ""}
                   onChange={(e) => {
-                    const selected = availableProjects.find(
-                      (p) => p.id === Number(e.target.value),
-                    );
+                    const id = Number(e.target.value);
+
+                    if (!id) {
+                      setProjectId(null);
+                      setProjectName("");
+                      setUnitPrice("");
+                      setDeliveryArea("");
+                      setStartLocation("");
+                      setEndLocation("");
+                      return;
+                    }
+
+                    const selected = availableProjects.find((p) => p.id === id);
 
                     if (!selected) return;
 
                     setProjectId(selected.id);
                     setProjectName(selected.name);
-                    setUnitPrice(selected.current_unit_price);
+                    setUnitPrice(String(selected.current_unit_price));
+                    setDeliveryArea(selected.delivery_area ?? "");
+                    setStartLocation(selected.start_location ?? "");
+                    setEndLocation(selected.end_location ?? "");
                   }}
-                  className="rounded-lg bg-slate-100 px-4 py-3 w-full"
+                  className="text-gray-700 px-3 py-3 w-full h-12 rounded-lg border border-teal-500
+                bg-teal-50 leading-12 outline-none"
                 >
+                  <option value="">選択してください</option>
+
                   {availableProjects.map((project) => (
                     <option key={project.id} value={project.id}>
                       {project.name}
