@@ -206,9 +206,10 @@ export default function ReportNewPage() {
         .maybeSingle();
 
       if (!data) {
-        alert(
-          `日報データが見つかりません\n日付: ${date}\nドライバーID: ${driverId}`,
-        );
+        console.log("日報なし", {
+          driverId,
+          date,
+        });
         return;
       }
 
@@ -242,14 +243,17 @@ export default function ReportNewPage() {
       // -----------------------------
       setDeliveryCount(data.delivery_count ?? "");
       setReturnedDeliveryCount(data.returned_delivery_count ?? "");
-      setCollectionCount(data.collection_count ?? 0);
       setWorkStatus(data.work_status ?? "");
       setNote(data.note ?? "");
 
-      setCarryOutAm(data.carry_out_am ?? 0);
-      setCarryOutPm(data.carry_out_pm ?? 0);
-      setCarryBackAm(data.carry_back_am ?? 0);
-      setCarryBackPm(data.carry_back_pm ?? 0);
+      setCollectionCount(String(data.collection_count ?? ""));
+      setCarryOutAm(String(data.carry_out_am ?? ""));
+      setCarryOutPm(String(data.carry_out_pm ?? ""));
+      setCarryBackAm(String(data.carry_back_am ?? ""));
+      setCarryBackPm(String(data.carry_back_pm ?? ""));
+
+      setOdometerStart(String(data.odometer_start ?? ""));
+      setOdometerEnd(String(data.odometer_end ?? ""));
 
       setLastDeliveryAm(data.last_delivery_am ?? "");
       setLastDeliveryPm(data.last_delivery_pm ?? "");
@@ -259,9 +263,6 @@ export default function ReportNewPage() {
 
       setBreakStart(data.break_start ?? "");
       setBreakEnd(data.break_end ?? "");
-
-      setOdometerStart(data.odometer_start ?? 0);
-      setOdometerEnd(data.odometer_end ?? 0);
 
       setCheckBrake(data.check_brake ?? false);
       setCheckTire(data.check_tire ?? false);
@@ -911,7 +912,7 @@ export default function ReportNewPage() {
                 <div className="bg-slate-100 rounded-lg p-3">
                   <div className="flex justify-between text-slate-700">
                     <span>単価</span>
-                    <span>¥{unitPrice.toLocaleString()}</span>
+                    <span>¥{Number(unitPrice || 0).toLocaleString()}</span>
                   </div>
                 </div>
                 {isShein && (
