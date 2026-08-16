@@ -430,6 +430,8 @@ export default function ReportNewPage() {
       return;
     }
     console.log("reportData", reportData);
+    console.log("driverId:", driverId);
+    console.log("date:", date);
 
     Object.entries(reportData).forEach(([key, value]) => {
       console.log(key, value, typeof value);
@@ -447,6 +449,7 @@ export default function ReportNewPage() {
       }
 
       alert("日報を更新しました");
+      console.log("新規保存成功", reportData);
     } else {
       const { error } = await supabase
         .from("daily_reports")
@@ -459,6 +462,7 @@ export default function ReportNewPage() {
       }
 
       alert("日報を保存しました");
+      console.log("日報更新成功", reportData);
     }
 
     setSaving(false);
