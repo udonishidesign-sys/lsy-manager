@@ -206,7 +206,9 @@ export default function ReportNewPage() {
         .maybeSingle();
 
       if (!data) {
-        console.log("保存済み日報なし");
+        alert(
+          `日報データが見つかりません\n日付: ${date}\nドライバーID: ${driverId}`,
+        );
         return;
       }
 
