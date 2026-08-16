@@ -162,6 +162,19 @@ export default function ReportNewPage() {
       setAvailableProjects(projects);
 
       setPlateNumber(driver.plate_number ?? "");
+
+      // 案件が1件だけの場合は自動設定
+      if (projects.length === 1) {
+        const project = projects[0];
+
+        setProjectId(project.id);
+        setProjectName(project.name);
+        setUnitPrice(String(project.current_unit_price));
+
+        setDeliveryArea(project.delivery_area ?? "");
+        setStartLocation(project.start_location ?? "");
+        setEndLocation(project.end_location ?? "");
+      }
     };
     loadDriver();
   }, [driverId]);
