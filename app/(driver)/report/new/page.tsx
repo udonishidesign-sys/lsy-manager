@@ -205,7 +205,12 @@ export default function ReportNewPage() {
         .eq("report_date", date)
         .maybeSingle();
 
-      if (!data) return;
+      if (!data) {
+        console.log("保存済み日報なし");
+        return;
+      }
+
+      console.log("保存済み日報:", data);
 
       // -----------------------------
       // 保存済み案件を復元
