@@ -28,17 +28,19 @@ type Project = {
   name: string;
   current_unit_price: number;
 };
-
+type DriverProject = {
+  project_id: number;
+  project: Project;
+};
 export default function ReportEditPage() {
   const router = useRouter();
   const [driverId, setDriverId] = useState<number | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState<number | null>(null);
-  const [projectName, setProjectName] = useState("");
+  const [unitPrice, setUnitPrice] = useState(0);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [deliveryCount, setDeliveryCount] = useState(0);
   const [deliveryArea, setDeliveryArea] = useState("");
-
   const [startLocation, setStartLocation] = useState("");
   const [endLocation, setEndLocation] = useState("");
   const [workStatus, setWorkStatus] = useState<"出勤" | "欠勤" | "">("");
@@ -78,15 +80,14 @@ export default function ReportEditPage() {
   const [alcoholCheckFile, setAlcoholCheckFile] = useState<File | null>(null);
   const [alcoholCheckImageUrl, setAlcoholCheckImageUrl] = useState("");
   const selectedProject = projects.find((p) => p.id === projectId);
-  const unitPrice = selectedProject?.current_unit_price ?? 0;
-  const sales = deliveryCount * unitPrice;
+  const projectName = selectedProject?.name ?? "";
   const isShein = projectName === "SHEIN";
   const [plateNumber, setPlateNumber] = useState("");
   const params = useParams();
   const reportId = Number(params.id);
   const [absenceReason, setAbsenceReason] = useState("");
   const distance = Math.max(odometerEnd - odometerStart, 0);
-  const [returnedDeliveryCount, setReturnedDeliveryCount] = useState("");
+  const [returnedDeliveryCount, setReturnedDeliveryCount] = useState(0);
 
   // -----------------------------
   // 初期ロード
@@ -110,31 +111,80 @@ export default function ReportEditPage() {
   }, []);
 
   // -----------------------------
-  // ドライバー情報取得（案件自動設定）
+  // ドライバー情報取得
+  // 複数案件対応
   // -----------------------------
   useEffect(() => {
     if (!driverId) return;
+
     const loadDriver = async () => {
-      const { data: driver } = await supabase
+      const { data: driver, error: driverError } = await supabase
         .from("drivers")
         .select("*")
         .eq("id", driverId)
         .single();
-      if (!driver) return;
 
-      const { data: project } = await supabase
-        .from("projects")
-        .select("id,name,current_unit_price")
-        .eq("id", driver.project_id)
-        .single();
-      if (!project) return;
-      setProjectId(project.id);
-      setProjectName(project.name);
+      if (driverError || !driver) {
+        console.error(driverError);
+        return;
+      }
+
       setPlateNumber(driver.plate_number ?? "");
-      setDeliveryArea(driver.delivery_area ?? "");
-      setStartLocation(driver.start_location ?? "");
-      setEndLocation(driver.end_location ?? "");
+
+      // ドライバーに紐づいている案件を取得
+      const { data: driverProjects, error: projectError } = await supabase
+        .from("driver_projects")
+        .select(
+          `
+        project_id,
+        project:projects (
+          id,
+          name,
+          current_unit_price
+        )
+      `,
+        )
+        .eq("driver_id", driverId);
+
+      if (projectError) {
+        console.error(projectError);
+        return;
+      }
+
+      const projectList = (driverProjects ?? [])
+        .map((item: any) => item.project)
+        .filter(Boolean) as Project[];
+
+      setProjects(projectList);
+
+      if (projectList.length === 1) {
+        setProjectId(projectList[0].id);
+        setUnitPrice(projectList[0].current_unit_price ?? 0);
+      }
+
+      // 案件が複数の場合
+      // → 日報編集では既存の日報の project_id を優先するので
+      // ここでは projectName は設定しない
+
+      // 案件情報から配送情報を取得
+      // ※現在のDB構造で projects にこのカラムがある場合
+      if (projectList.length === 1) {
+        const project = projectList[0];
+
+        const { data: projectDetail } = await supabase
+          .from("projects")
+          .select("*")
+          .eq("id", project.id)
+          .single();
+
+        if (projectDetail) {
+          setDeliveryArea(projectDetail.delivery_area ?? "");
+          setStartLocation(projectDetail.start_location ?? "");
+          setEndLocation(projectDetail.end_location ?? "");
+        }
+      }
     };
+
     loadDriver();
   }, [driverId]);
 
@@ -163,6 +213,17 @@ export default function ReportEditPage() {
 
       if (!data) return;
       setProjectId(data.project_id);
+
+      const { data: project } = await supabase
+        .from("projects")
+        .select("id, name, current_unit_price")
+        .eq("id", data.project_id)
+        .single();
+
+      if (project) {
+        setUnitPrice(data.unit_price ?? project.current_unit_price ?? 0);
+      }
+
       setDate(data.report_date);
       setDeliveryCount(data.delivery_count ?? 0);
       setReturnedDeliveryCount(data.returned_delivery_count ?? 0);
@@ -225,6 +286,11 @@ export default function ReportEditPage() {
   const submit = async () => {
     if (!driverId) return;
 
+    if (!projectId) {
+      alert("案件が選択されていません");
+      return;
+    }
+
     if (!workStatus) {
       alert("出勤区分を選択してください");
       return;
@@ -280,6 +346,8 @@ export default function ReportEditPage() {
       plate_number: plateNumber || null,
       report_date: date,
       delivery_count: workStatus === "欠勤" ? 0 : deliveryCount,
+      returned_delivery_count:
+        workStatus === "欠勤" ? 0 : returnedDeliveryCount,
       delivery_area: workStatus === "欠勤" ? null : deliveryArea || null,
       unit_price: unitPrice,
       work_status: workStatus,
@@ -753,7 +821,9 @@ export default function ReportEditPage() {
                     type="number"
                     value={returnedDeliveryCount}
                     suffix="件"
-                    onChange={(e) => setReturnedDeliveryCount(e.target.value)}
+                    onChange={(e) =>
+                      setReturnedDeliveryCount(Number(e.target.value))
+                    }
                   />
                 )}
                 <Input
