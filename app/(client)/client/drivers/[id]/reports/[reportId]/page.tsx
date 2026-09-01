@@ -299,7 +299,7 @@ export default function ClientDriverReportDetailPage() {
               onClick={() => router.push(`/client/drivers/${driverId}/reports`)}
               className="mt-4 px-4 py-2 rounded-lg bg-teal-500 text-white font-bold hover:cursor-pointer"
             >
-              日報一覧へ戻る
+              ログインする
             </button>
           </div>
         </div>

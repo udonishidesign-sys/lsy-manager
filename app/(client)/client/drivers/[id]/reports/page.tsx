@@ -88,11 +88,7 @@ export default function ClientDriverReportsPage() {
       if (clientError || !client) {
         console.error(clientError);
 
-        setError(
-          `受託先情報を取得できませんでした。\nログインメール: ${
-            session.user.email ?? ""
-          }`,
-        );
+        setError(`受託先情報を取得できませんでした。`);
 
         setLoading(false);
         return;
@@ -284,7 +280,7 @@ export default function ClientDriverReportsPage() {
               onClick={() => router.push("/client")}
               className="mt-4 px-4 py-2 rounded-lg bg-teal-500 text-white font-bold hover:cursor-pointer"
             >
-              ドライバー一覧へ戻る
+              ログインする
             </button>
           </div>
         </div>
