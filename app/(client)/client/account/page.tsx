@@ -145,11 +145,11 @@ export default function ClientAccountPage() {
         ====================================================== */}
 
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">アカウント設定</h1>
+          <h1 className="text-2xl font-bold text-slate-900">アカウント情報</h1>
 
-          <p className="text-sm text-gray-500 mt-2">
+          {/*<p className="text-sm text-gray-500 mt-2">
             アカウント情報やパスワードを管理できます。
-          </p>
+          </p>*/}
         </div>
 
         {/* =====================================================
@@ -163,7 +163,7 @@ export default function ClientAccountPage() {
             <div className="flex items-center gap-2">
               <UserRound size={20} className="text-teal-500" />
 
-              <h2 className="font-bold text-slate-800">アカウント情報</h2>
+              <h2 className="font-bold text-slate-800">アカウント</h2>
             </div>
           </div>
 
