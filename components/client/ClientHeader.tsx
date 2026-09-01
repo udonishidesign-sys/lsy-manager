@@ -165,14 +165,14 @@ export default function ClientHeader() {
                 アカウント設定
               </button>
 
-              <button
+              {/*<button
                 type="button"
                 onClick={goToPassword}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left text-sm text-slate-700 hover:bg-gray-50 hover:cursor-pointer"
               >
                 <LockKeyhole size={19} className="text-teal-600" />
                 パスワード変更
-              </button>
+              </button>*/}
 
               <div className="border-t border-gray-100 my-2" />
 
