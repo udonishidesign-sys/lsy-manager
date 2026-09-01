@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { UserRound, Calendar, Package, ChevronLeft } from "lucide-react";
+import { UserRound, Calendar, ChevronLeft } from "lucide-react";
 
 type Driver = {
   id: number;
@@ -28,29 +28,61 @@ type Project = {
 export default function ClientDriverReportsPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
 
   const driverId = Number(params.id);
+
+  const monthInputRef = useRef<HTMLInputElement>(null);
+
+  /*
+   * URLに月があればそれを使用
+   * なければ現在月
+   */
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  const initialMonth = searchParams.get("month") || currentMonth;
+
+  const [selectedMonth, setSelectedMonth] = useState(initialMonth);
 
   const [driver, setDriver] = useState<Driver | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [project, setProject] = useState<Project | null>(null);
 
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  });
-  const monthInputRef = useRef<HTMLInputElement>(null);
-
   const [page, setPage] = useState(1);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const pageSize = 10;
 
+  /*
+   * =========================================================
+   * 月が変更されたら1ページ目へ
+   * =========================================================
+   */
   useEffect(() => {
     setPage(1);
   }, [selectedMonth]);
 
+  /*
+   * =========================================================
+   * URLのmonthが変更された場合もselectedMonthを同期
+   * =========================================================
+   */
+  useEffect(() => {
+    const monthFromUrl = searchParams.get("month");
+
+    if (monthFromUrl && monthFromUrl !== selectedMonth) {
+      setSelectedMonth(monthFromUrl);
+      setPage(1);
+    }
+  }, [searchParams, selectedMonth]);
+
+  /*
+   * =========================================================
+   * 日報取得
+   * =========================================================
+   */
   useEffect(() => {
     const loadReports = async () => {
       setLoading(true);
@@ -62,23 +94,25 @@ export default function ClientDriverReportsPage() {
         return;
       }
 
-      // =========================================================
-      // ログイン確認
-      // =========================================================
-
+      /*
+       * =========================================================
+       * ログイン確認
+       * =========================================================
+       */
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
       if (!session?.user) {
-        router.push("/login");
+        router.push("/client/login");
         return;
       }
 
-      // =========================================================
-      // ログイン中の受託先を取得
-      // =========================================================
-
+      /*
+       * =========================================================
+       * ログイン中の受託先を取得
+       * =========================================================
+       */
       const { data: client, error: clientError } = await supabase
         .from("clients")
         .select("id")
@@ -88,18 +122,18 @@ export default function ClientDriverReportsPage() {
       if (clientError || !client) {
         console.error(clientError);
 
-        setError(`受託先情報を取得できませんでした。`);
-
-        setLoading(false);
+        router.push("/client/login");
         return;
       }
 
-      // =========================================================
-      // ドライバー取得
-      //
-      // drivers.client_id とログイン中の受託先を確認
-      // =========================================================
-
+      /*
+       * =========================================================
+       * ドライバー取得
+       *
+       * drivers.client_id と
+       * ログイン中の受託先を確認
+       * =========================================================
+       */
       const { data: driverData, error: driverError } = await supabase
         .from("drivers")
         .select("id, name")
@@ -118,14 +152,13 @@ export default function ClientDriverReportsPage() {
 
       setDriver(driverData);
 
-      // =========================================================
-      // 受託先に紐づく案件を取得
-      //
-      // 1受託先 = 1案件
-      //
-      // projects.client_id で紐付ける
-      // =========================================================
-
+      /*
+       * =========================================================
+       * 受託先に紐づく案件を取得
+       *
+       * 1受託先 = 1案件
+       * =========================================================
+       */
       const { data: projectData, error: projectError } = await supabase
         .from("projects")
         .select("id, name, client_id")
@@ -148,13 +181,11 @@ export default function ClientDriverReportsPage() {
 
       setProject(projectData);
 
-      // =========================================================
-      // ドライバーがその案件を担当しているか確認
-      //
-      // driver_projects
-      // driver_id + project_id
-      // =========================================================
-
+      /*
+       * =========================================================
+       * ドライバーがその案件を担当しているか確認
+       * =========================================================
+       */
       const { data: driverProject, error: driverProjectError } = await supabase
         .from("driver_projects")
         .select("project_id")
@@ -166,46 +197,50 @@ export default function ClientDriverReportsPage() {
         console.error(driverProjectError);
 
         setError("ドライバーの担当案件情報を確認できませんでした。");
+
         setLoading(false);
         return;
       }
 
       if (!driverProject) {
         setError("このドライバーは現在、この受託先の案件を担当していません。");
+
         setLoading(false);
         return;
       }
 
-      // =========================================================
-      // 月の範囲を作成
-      //
-      // selectedMonth = "2026-09"
-      //
-      // 2026-09-01 ～ 2026-09-30
-      // =========================================================
-
+      /*
+       * =========================================================
+       * 月の範囲を作成
+       *
+       * selectedMonth
+       * 例：2026-08
+       *
+       * 2026-08-01 ～ 2026-08-31
+       * =========================================================
+       */
       const [year, month] = selectedMonth.split("-").map(Number);
 
       const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
 
       const lastDay = new Date(year, month, 0).getDate();
 
-      const endDate = `${year}-${String(month).padStart(2, "0")}-${String(
-        lastDay,
-      ).padStart(2, "0")}`;
+      const endDate = `${year}-${String(month).padStart(
+        2,
+        "0",
+      )}-${String(lastDay).padStart(2, "0")}`;
 
-      // =========================================================
-      // 日報取得
-      //
-      // ドライバーID
-      // ＋
-      // 受託先の案件ID
-      // ＋
-      // 選択した月
-      //
-      // この3条件で絞り込む
-      // =========================================================
-
+      /*
+       * =========================================================
+       * 日報取得
+       *
+       * ドライバーID
+       * ＋
+       * 受託先の案件ID
+       * ＋
+       * 選択した月
+       * =========================================================
+       */
       const { data: reportsData, error: reportsError } = await supabase
         .from("daily_reports")
         .select(
@@ -240,20 +275,65 @@ export default function ClientDriverReportsPage() {
     loadReports();
   }, [driverId, router, selectedMonth]);
 
-  // =========================================================
-  // ページネーション
-  // =========================================================
-
+  /*
+   * =========================================================
+   * ページネーション
+   * =========================================================
+   */
   const totalPages = Math.max(Math.ceil(reports.length / pageSize), 1);
 
   const start = (page - 1) * pageSize;
 
   const paginatedReports = reports.slice(start, start + pageSize);
 
-  // =========================================================
-  // 読み込み中
-  // =========================================================
+  /*
+   * =========================================================
+   * 月を変更
+   *
+   * URLにもmonthを保存する
+   *
+   * 例：
+   * /client/drivers/1/reports?month=2026-08
+   * =========================================================
+   */
+  const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const month = e.target.value;
 
+    setSelectedMonth(month);
+    setPage(1);
+
+    router.replace(`/client/drivers/${driverId}/reports?month=${month}`, {
+      scroll: false,
+    });
+  };
+
+  /*
+   * =========================================================
+   * 詳細画面へ移動
+   *
+   * 現在選択しているmonthも渡す
+   * =========================================================
+   */
+  const handleDetail = (reportId: number) => {
+    router.push(
+      `/client/drivers/${driverId}/reports/${reportId}?month=${selectedMonth}`,
+    );
+  };
+
+  /*
+   * =========================================================
+   * ドライバー一覧へ戻る
+   * =========================================================
+   */
+  const handleBackToDrivers = () => {
+    router.push("/client");
+  };
+
+  /*
+   * =========================================================
+   * 読み込み中
+   * =========================================================
+   */
   if (loading) {
     return (
       <main className="min-h-screen bg-white px-4 pt-24">
@@ -264,10 +344,11 @@ export default function ClientDriverReportsPage() {
     );
   }
 
-  // =========================================================
-  // エラー
-  // =========================================================
-
+  /*
+   * =========================================================
+   * エラー
+   * =========================================================
+   */
   if (error) {
     return (
       <main className="min-h-screen bg-white px-4 pt-24">
@@ -277,10 +358,10 @@ export default function ClientDriverReportsPage() {
 
             <button
               type="button"
-              onClick={() => router.push("/client")}
+              onClick={handleBackToDrivers}
               className="mt-4 px-4 py-2 rounded-lg bg-teal-500 text-white font-bold hover:cursor-pointer"
             >
-              ログインする
+              ドライバー一覧へ戻る
             </button>
           </div>
         </div>
@@ -288,22 +369,22 @@ export default function ClientDriverReportsPage() {
     );
   }
 
-  // =========================================================
-  // UI
-  // =========================================================
-
+  /*
+   * =========================================================
+   * UI
+   * =========================================================
+   */
   return (
     <main className="min-h-screen bg-white px-4 pt-24 pb-24">
       <div className="max-w-3xl mx-auto space-y-5">
         {/* =====================================================
             ヘッダー
         ===================================================== */}
-
         <div className="flex items-center justify-between">
           <div>
             <button
               type="button"
-              onClick={() => router.push("/client")}
+              onClick={handleBackToDrivers}
               className="flex items-center gap-1 text-sm text-teal-600 mb-3 hover:cursor-pointer"
             >
               <ChevronLeft size={18} />
@@ -331,12 +412,12 @@ export default function ClientDriverReportsPage() {
         {/* =====================================================
             月選択
         ===================================================== */}
-
         <div className="bg-white border border-mist-200 rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 mb-1.5">
-                <Calendar size={20} className="text-teal-500" />
+                <Calendar size={20} className="text-teal-500 shrink-0" />
+
                 <label className="block text-sm text-gray-500">対象月</label>
               </div>
 
@@ -344,10 +425,7 @@ export default function ClientDriverReportsPage() {
                 ref={monthInputRef}
                 type="month"
                 value={selectedMonth}
-                onChange={(e) => {
-                  setSelectedMonth(e.target.value);
-                  setPage(1);
-                }}
+                onChange={handleMonthChange}
                 onClick={() => {
                   if (monthInputRef.current?.showPicker) {
                     monthInputRef.current.showPicker();
@@ -362,26 +440,21 @@ export default function ClientDriverReportsPage() {
         {/* =====================================================
             日報一覧
         ===================================================== */}
-
         <div className="bg-white border border-mist-200 rounded-xl overflow-hidden shadow-sm">
           {/* PCヘッダー */}
-
           <div className="hidden md:flex bg-mist-200 px-4 py-3">
-            <p className="font-semibold text-gray-600 w-1/4 flex items-center gap-1">
-              日付
-            </p>
+            <p className="font-semibold text-gray-600 w-1/4">日付</p>
 
-            <p className="font-semibold text-gray-600 w-1/4 flex items-center gap-1">
-              配送数
-            </p>
+            <p className="font-semibold text-gray-600 w-1/4">配送数</p>
 
             <p className="font-semibold text-gray-600 w-1/4">勤務区分</p>
 
             <p className="font-semibold text-gray-600 w-1/4">詳細</p>
           </div>
 
-          {/* 日報なし */}
-
+          {/* =================================================
+              日報なし
+          ================================================= */}
           {paginatedReports.length === 0 ? (
             <div className="p-8 text-center">
               <p className="text-sm text-gray-500">
@@ -397,7 +470,6 @@ export default function ClientDriverReportsPage() {
                 {/* =================================================
                     PC
                 ================================================= */}
-
                 <div className="hidden md:flex items-center">
                   <p className="text-gray-700 w-1/4">{report.report_date}</p>
 
@@ -412,11 +484,7 @@ export default function ClientDriverReportsPage() {
                   <div className="w-1/4">
                     <button
                       type="button"
-                      onClick={() =>
-                        router.push(
-                          `/client/drivers/${driverId}/reports/${report.id}`,
-                        )
-                      }
+                      onClick={() => handleDetail(report.id)}
                       className="text-sm text-teal-600 hover:underline hover:cursor-pointer"
                     >
                       詳細
@@ -427,12 +495,9 @@ export default function ClientDriverReportsPage() {
                 {/* =================================================
                     スマホ
                 ================================================= */}
-
                 <div className="md:hidden space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-xs text-gray-500 flex items-center gap-1">
-                      日付
-                    </span>
+                    <span className="text-xs text-gray-500">日付</span>
 
                     <span className="text-gray-700 font-medium">
                       {report.report_date}
@@ -440,9 +505,7 @@ export default function ClientDriverReportsPage() {
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-xs text-gray-500 flex items-center gap-1">
-                      配送数
-                    </span>
+                    <span className="text-xs text-gray-500">配送数</span>
 
                     <span className="text-gray-700">
                       {report.delivery_count ?? 0}件
@@ -459,11 +522,7 @@ export default function ClientDriverReportsPage() {
 
                   <button
                     type="button"
-                    onClick={() =>
-                      router.push(
-                        `/client/drivers/${driverId}/reports/${report.id}`,
-                      )
-                    }
+                    onClick={() => handleDetail(report.id)}
                     className="w-full mt-3 py-2 rounded-lg border border-teal-500 text-teal-600 font-bold hover:cursor-pointer"
                   >
                     詳細を見る
@@ -477,7 +536,6 @@ export default function ClientDriverReportsPage() {
         {/* =====================================================
             ページネーション
         ===================================================== */}
-
         {reports.length > 0 && (
           <div className="flex justify-center items-center gap-4">
             <button
@@ -497,7 +555,7 @@ export default function ClientDriverReportsPage() {
               type="button"
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
-              className="px-4 py-2 border border-teal-600 text-teal-600 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:cursor-pointer hover:cursor-pointer"
+              className="px-4 py-2 border border-teal-600 text-teal-600 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:cursor-pointer"
             >
               次へ
             </button>

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+
 import {
   UserRound,
   Calendar,
@@ -31,26 +32,20 @@ type Report = {
   delivery_area: string | null;
   work_status: string | null;
   absence_reason: string | null;
-
   start_time: string | null;
   end_time: string | null;
   break_start: string | null;
   break_end: string | null;
-
   start_location: string | null;
   end_location: string | null;
-
   odometer_start: number | null;
   odometer_end: number | null;
-
   carry_out_am: number | null;
   carry_out_pm: number | null;
   carry_back_am: number | null;
   carry_back_pm: number | null;
-
   last_delivery_am: string | null;
   last_delivery_pm: string | null;
-
   collection_count: number | null;
 
   check_brake: boolean | null;
@@ -125,6 +120,7 @@ const DetailRow = ({
   return (
     <div className="flex justify-between gap-4 py-3 border-b border-gray-100 last:border-none">
       <span className="text-sm text-gray-500 shrink-0">{label}</span>
+
       <span className="text-sm text-slate-700 text-right break-words">
         {value}
       </span>
@@ -142,6 +138,7 @@ const SectionTitle = ({
   return (
     <div className="flex items-center gap-2 pb-3 border-b border-teal-500">
       <span className="text-teal-500">{icon}</span>
+
       <h2 className="font-bold text-slate-800">{title}</h2>
     </div>
   );
@@ -150,9 +147,25 @@ const SectionTitle = ({
 export default function ClientDriverReportDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
 
+  /*
+   * -----------------------------------------
+   * URLパラメータ取得
+   *
+   * /client/drivers/[id]/reports/[reportId]
+   * -----------------------------------------
+   */
   const driverId = Number(params.id);
   const reportId = Number(params.reportId);
+
+  /*
+   * 一覧画面で選択していた月
+   *
+   * 例：
+   * ?month=2026-08
+   */
+  const selectedMonth = searchParams.get("month") || "";
 
   const [driver, setDriver] = useState<Driver | null>(null);
   const [report, setReport] = useState<Report | null>(null);
@@ -166,6 +179,11 @@ export default function ClientDriverReportDetailPage() {
       setLoading(true);
       setError("");
 
+      /*
+       * -----------------------------------------
+       * IDチェック
+       * -----------------------------------------
+       */
       if (
         !driverId ||
         Number.isNaN(driverId) ||
@@ -177,12 +195,17 @@ export default function ClientDriverReportDetailPage() {
         return;
       }
 
+      /*
+       * -----------------------------------------
+       * ログイン状態確認
+       * -----------------------------------------
+       */
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
       if (!session?.user) {
-        router.push("/login");
+        router.push("/client/login");
         return;
       }
 
@@ -199,8 +222,10 @@ export default function ClientDriverReportDetailPage() {
 
       if (clientError || !client) {
         console.error(clientError);
+
         setError("受託先情報を取得できませんでした。");
         setLoading(false);
+
         return;
       }
 
@@ -218,8 +243,11 @@ export default function ClientDriverReportDetailPage() {
 
       if (driverError || !driverData) {
         console.error(driverError);
+
         setError("このドライバーの日報を閲覧する権限がありません。");
+
         setLoading(false);
+
         return;
       }
 
@@ -240,8 +268,10 @@ export default function ClientDriverReportDetailPage() {
 
       if (reportError || !reportData) {
         console.error(reportError);
+
         setError("日報を取得できませんでした。");
         setLoading(false);
+
         return;
       }
 
@@ -250,9 +280,7 @@ export default function ClientDriverReportDetailPage() {
        * 案件取得
        *
        * 案件＝受託先なので、
-       * 日報の project_id から案件を取得する。
-       *
-       * 詳細画面では案件名自体は表示しない。
+       * 日報のproject_idから取得
        * -----------------------------------------
        */
       if (reportData.project_id) {
@@ -275,6 +303,28 @@ export default function ClientDriverReportDetailPage() {
     loadReport();
   }, [driverId, reportId, router]);
 
+  /*
+   * -----------------------------------------
+   * 日報一覧へ戻る
+   *
+   * 選択していた月を維持する
+   * -----------------------------------------
+   */
+  const goBackToReports = () => {
+    const url = selectedMonth
+      ? `/client/drivers/${driverId}/reports?month=${encodeURIComponent(
+          selectedMonth,
+        )}`
+      : `/client/drivers/${driverId}/reports`;
+
+    router.push(url);
+  };
+
+  /*
+   * -----------------------------------------
+   * ローディング
+   * -----------------------------------------
+   */
   if (loading) {
     return (
       <main className="min-h-screen bg-white px-4 pt-24">
@@ -285,6 +335,11 @@ export default function ClientDriverReportDetailPage() {
     );
   }
 
+  /*
+   * -----------------------------------------
+   * エラー
+   * -----------------------------------------
+   */
   if (error || !report) {
     return (
       <main className="min-h-screen bg-white px-4 pt-24">
@@ -296,10 +351,10 @@ export default function ClientDriverReportDetailPage() {
 
             <button
               type="button"
-              onClick={() => router.push(`/client/drivers/${driverId}/reports`)}
+              onClick={goBackToReports}
               className="mt-4 px-4 py-2 rounded-lg bg-teal-500 text-white font-bold hover:cursor-pointer"
             >
-              ログインする
+              日報一覧へ戻る
             </button>
           </div>
         </div>
@@ -307,6 +362,11 @@ export default function ClientDriverReportDetailPage() {
     );
   }
 
+  /*
+   * -----------------------------------------
+   * 計算
+   * -----------------------------------------
+   */
   const distance = Math.max(
     Number(report.odometer_end ?? 0) - Number(report.odometer_start ?? 0),
     0,
@@ -314,6 +374,11 @@ export default function ClientDriverReportDetailPage() {
 
   const isAbsent = report.work_status === "欠勤";
 
+  /*
+   * -----------------------------------------
+   * 表示
+   * -----------------------------------------
+   */
   return (
     <main className="min-h-screen bg-white px-4 pt-24 pb-24">
       <div className="max-w-3xl mx-auto space-y-5">
@@ -321,7 +386,7 @@ export default function ClientDriverReportDetailPage() {
         <div>
           <button
             type="button"
-            onClick={() => router.push(`/client/drivers/${driverId}/reports`)}
+            onClick={goBackToReports}
             className="flex items-center gap-1 text-sm text-teal-600 mb-4 hover:cursor-pointer"
           >
             <ChevronLeft size={18} />
@@ -537,7 +602,7 @@ export default function ClientDriverReportDetailPage() {
         {/* 戻る */}
         <button
           type="button"
-          onClick={() => router.push(`/client/drivers/${driverId}/reports`)}
+          onClick={goBackToReports}
           className="w-full h-12 rounded-lg border border-teal-500 text-teal-600 font-bold bg-white hover:cursor-pointer"
         >
           日報一覧へ戻る
