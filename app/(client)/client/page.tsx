@@ -28,7 +28,7 @@ export default function ClientHomePage() {
       } = await supabase.auth.getSession();
 
       if (!session?.user) {
-        router.push("/login");
+        router.push("/client/login");
         return;
       }
 
@@ -41,8 +41,7 @@ export default function ClientHomePage() {
 
       if (clientError || !client) {
         console.error(clientError);
-        setError("受託先情報を取得できませんでした。");
-        setLoading(false);
+        router.push("/client/login");
         return;
       }
 
