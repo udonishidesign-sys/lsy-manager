@@ -353,7 +353,7 @@ export default function ClientDriverReportsPage() {
                     monthInputRef.current.showPicker();
                   }
                 }}
-                className="border p-2 rounded-lg w-full bg-white text-gray-600 border-mist-200 cursor-pointer"
+                className="border p-2 rounded-lg w-full min-w-0 max-w-full box-border bg-white text-gray-600 border-mist-200"
               />
             </div>
           </div>
