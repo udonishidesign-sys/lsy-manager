@@ -908,13 +908,6 @@ export default function ReportNewPage() {
                   onChange={(e) => setDeliveryCount(e.target.value)}
                 />
 
-                {/* 売上 */}
-                <div className="bg-slate-100 rounded-lg p-3">
-                  <div className="flex justify-between text-slate-700">
-                    <span>単価</span>
-                    <span>¥{Number(unitPrice || 0).toLocaleString()}</span>
-                  </div>
-                </div>
                 {isShein && (
                   <Input
                     label="不在持ち帰り件数"

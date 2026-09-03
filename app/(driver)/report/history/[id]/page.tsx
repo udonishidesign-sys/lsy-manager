@@ -295,12 +295,7 @@ export default function ReportDetailPage() {
                 label="配達完了件数"
                 value={`${report.delivery_count ?? 0}件`}
               />
-              <div className="bg-slate-100 rounded-lg p-3">
-                <div className="flex justify-between text-slate-700">
-                  <span>単価</span>
-                  <span>{formatYen(report.unit_price ?? 0)}</span>
-                </div>
-              </div>
+
               {isShein && (
                 <DetailField
                   label="不在持ち帰り件数"
