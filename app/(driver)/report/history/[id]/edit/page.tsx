@@ -82,6 +82,7 @@ export default function ReportEditPage() {
   const selectedProject = projects.find((p) => p.id === projectId);
   const projectName = selectedProject?.name ?? "";
   const isShein = projectName === "SHEIN";
+  const isCSOSakaTech = projectName === "CS大阪テック";
   const [plateNumber, setPlateNumber] = useState("");
   const params = useParams();
   const reportId = Number(params.id);
@@ -532,7 +533,7 @@ export default function ReportEditPage() {
               </div>
             )}
           </Card>
-          {workStatus !== "欠勤" && (
+          {workStatus !== "欠勤" && !isShein && (
             <>
               {/* アルコールチェック */}
               <Card>
@@ -795,7 +796,10 @@ export default function ReportEditPage() {
                   />
                 </div>
               </Card>
-
+            </>
+          )}
+          {workStatus !== "欠勤" && (
+            <>
               {/* 配送実績 */}
               <Card>
                 <FormSection icon={<Package size={24} />} title="配送実績" />
@@ -808,24 +812,28 @@ export default function ReportEditPage() {
                   onChange={(e) => setDeliveryCount(Number(e.target.value))}
                 />
 
-                {isShein && (
-                  <Input
-                    label="不在持ち帰り件数"
-                    type="number"
-                    value={returnedDeliveryCount}
-                    suffix="件"
-                    onChange={(e) =>
-                      setReturnedDeliveryCount(Number(e.target.value))
-                    }
-                  />
+                {!isShein && (
+                  <>
+                    {!isCSOSakaTech && (
+                      <Input
+                        label="不在持ち帰り件数"
+                        type="number"
+                        value={returnedDeliveryCount}
+                        suffix="件"
+                        onChange={(e) =>
+                          setReturnedDeliveryCount(Number(e.target.value))
+                        }
+                      />
+                    )}
+                    <Input
+                      label="伝票枚数"
+                      type="number"
+                      value={carryOutAm}
+                      suffix="枚"
+                      onChange={(e) => setCarryOutAm(Number(e.target.value))}
+                    />
+                  </>
                 )}
-                <Input
-                  label="伝票枚数"
-                  type="number"
-                  value={carryOutAm}
-                  suffix="枚"
-                  onChange={(e) => setCarryOutAm(Number(e.target.value))}
-                />
               </Card>
             </>
           )}

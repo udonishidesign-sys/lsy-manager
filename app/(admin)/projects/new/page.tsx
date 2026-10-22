@@ -16,12 +16,9 @@ export default function NewProjectPage() {
   const [name, setName] = useState("");
   const [partnerCompany, setPartnerCompany] = useState("");
   const [deliveryArea, setDeliveryArea] = useState("");
-  const [centerName, setCenterName] = useState("");
-  const [contactPerson, setContactPerson] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [largeUnitPrice1, setLargeUnitPrice1] = useState("");
   const [largeUnitPrice2, setLargeUnitPrice2] = useState("");
-  const [projectRule, setProjectRule] = useState("");
   const [cautionNote, setCautionNote] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
@@ -35,11 +32,6 @@ export default function NewProjectPage() {
       return;
     }
 
-    if (!unitPrice) {
-      alert("通常単価を入力してください");
-      return;
-    }
-
     setLoading(true);
 
     const { error } = await supabase.from("projects").insert([
@@ -47,14 +39,11 @@ export default function NewProjectPage() {
         name,
         partner_company: partnerCompany || null,
         delivery_area: deliveryArea || null,
-        center_name: centerName || null,
         address: address || null,
         phone: phone || null,
-        contact_person: contactPerson || null,
-        current_unit_price: Number(unitPrice),
+        current_unit_price: unitPrice.trim() === "" ? null : Number(unitPrice),
         large_unit_price_1: Number(largeUnitPrice1 || 0),
         large_unit_price_2: Number(largeUnitPrice2 || 0),
-        project_rule: projectRule || null,
         caution_note: cautionNote || null,
         start_location: startLocation || null,
         end_location: endLocation || null,
@@ -107,16 +96,6 @@ export default function NewProjectPage() {
               onChange={(e) => setEndLocation(e.target.value)}
             />
             <Input
-              label="センター"
-              value={centerName}
-              onChange={(e) => setCenterName(e.target.value)}
-            />
-            <Input
-              label="担当者"
-              value={contactPerson}
-              onChange={(e) => setContactPerson(e.target.value)}
-            />{" "}
-            <Input
               label="住所"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
@@ -162,12 +141,6 @@ export default function NewProjectPage() {
                 <label className="block text-sm text-gray-500 mb-1">
                   案件ルール
                 </label>
-                <textarea
-                  value={projectRule}
-                  onChange={(e) => setProjectRule(e.target.value)}
-                  rows={4}
-                  className="border rounded-lg w-full py-3 px-2 bg-teal-50 border-teal-500 text-slate-700 outline-none"
-                />
               </div>
 
               <div>

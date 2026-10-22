@@ -573,18 +573,6 @@ export default function ClientDriverReportDetailPage() {
                 />
               </div>
             </div>
-
-            {/* 配送実績 */}
-            <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-4">
-              <SectionTitle icon={<Package size={22} />} title="配送実績" />
-
-              <div>
-                <DetailRow
-                  label="配達完了件数"
-                  value={`${formatNumber(report.delivery_count)} 件`}
-                />
-              </div>
-            </div>
           </>
         )}
 

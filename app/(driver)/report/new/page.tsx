@@ -17,7 +17,6 @@ import {
   ClipboardPen,
   Package,
   Van,
-  FileText,
   Clock,
   CircleCheckBig,
   ChevronDown,
@@ -84,16 +83,13 @@ export default function ReportNewPage() {
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-
       const { data } = await supabase.auth.getSession();
-
       if (!data.session) {
         router.push("/login");
         return;
       }
 
       const savedDriverId = getDriverSessionId();
-
       if (!savedDriverId) {
         const { driverId } = await findDriverIdForUser({
           email: data.session.user.email,
@@ -184,7 +180,6 @@ export default function ReportNewPage() {
   // -----------------------------
   useEffect(() => {
     if (!driverId) return;
-
     const loadTodayReport = async () => {
       const { data } = await supabase
         .from("daily_reports")
@@ -245,25 +240,19 @@ export default function ReportNewPage() {
       setReturnedDeliveryCount(data.returned_delivery_count ?? "");
       setWorkStatus(data.work_status ?? "");
       setNote(data.note ?? "");
-
       setCollectionCount(String(data.collection_count ?? ""));
       setCarryOutAm(String(data.carry_out_am ?? ""));
       setCarryOutPm(String(data.carry_out_pm ?? ""));
       setCarryBackAm(String(data.carry_back_am ?? ""));
       setCarryBackPm(String(data.carry_back_pm ?? ""));
-
       setOdometerStart(String(data.odometer_start ?? ""));
       setOdometerEnd(String(data.odometer_end ?? ""));
-
       setLastDeliveryAm(data.last_delivery_am ?? "");
       setLastDeliveryPm(data.last_delivery_pm ?? "");
-
       setStartTime(data.start_time ?? "");
       setEndTime(data.end_time ?? "");
-
       setBreakStart(data.break_start ?? "");
       setBreakEnd(data.break_end ?? "");
-
       setCheckBrake(data.check_brake ?? false);
       setCheckTire(data.check_tire ?? false);
       setCheckLight(data.check_light ?? false);
@@ -281,9 +270,7 @@ export default function ReportNewPage() {
       setCheckLicensePlate(data.check_license_plate ?? false);
       setCheckVehicleInspection(data.check_vehicle_inspection ?? false);
       setCheckInsurance(data.check_insurance ?? false);
-
       setAbsenceReason(data.absence_reason ?? "");
-
       setAlcoholCheckTime(data.alcohol_check_time ?? "");
       setAlcoholCheckImageUrl(data.alcohol_check_image_url ?? "");
     };
@@ -293,13 +280,10 @@ export default function ReportNewPage() {
 
   const changeProject = (id: number) => {
     const project = availableProjects.find((item) => item.id === id);
-
     if (!project) return;
-
     setProjectId(project.id);
     setProjectName(project.name);
     setUnitPrice(String(project.current_unit_price));
-
     setDeliveryArea(project.delivery_area ?? "");
     setStartLocation(project.start_location ?? "");
     setEndLocation(project.end_location ?? "");
@@ -475,6 +459,7 @@ export default function ReportNewPage() {
     0,
   );
   const isShein = projectName === "SHEIN";
+  const isCSOSakaTech = projectName === "CS大阪テック";
 
   if (loading) {
     return (
@@ -631,7 +616,7 @@ export default function ReportNewPage() {
               </div>
             )}
           </Card>
-          {workStatus !== "欠勤" && (
+          {workStatus !== "欠勤" && !isShein && (
             <>
               {/* アルコールチェック */}
               <Card>
@@ -894,12 +879,13 @@ export default function ReportNewPage() {
                   />
                 </div>
               </Card>
-
+            </>
+          )}
+          {workStatus !== "欠勤" && (
+            <>
               <Card>
                 {/* 配送数 */}
-
                 <FormSection icon={<Package size={24} />} title="配送実績" />
-
                 <Input
                   label="配達完了件数"
                   type="number"
@@ -907,23 +893,28 @@ export default function ReportNewPage() {
                   suffix="件"
                   onChange={(e) => setDeliveryCount(e.target.value)}
                 />
-
-                {isShein && (
-                  <Input
-                    label="不在持ち帰り件数"
-                    type="number"
-                    value={returnedDeliveryCount}
-                    suffix="件"
-                    onChange={(e) => setReturnedDeliveryCount(e.target.value)}
-                  />
+                {!isShein && (
+                  <>
+                    {!isCSOSakaTech && (
+                      <Input
+                        label="不在持ち帰り件数"
+                        type="number"
+                        value={returnedDeliveryCount}
+                        suffix="件"
+                        onChange={(e) =>
+                          setReturnedDeliveryCount(e.target.value)
+                        }
+                      />
+                    )}
+                    <Input
+                      label="伝票枚数"
+                      type="number"
+                      value={carryOutAm}
+                      suffix="枚"
+                      onChange={(e) => setCarryOutAm(e.target.value)}
+                    />
+                  </>
                 )}
-                <Input
-                  label="伝票枚数"
-                  type="number"
-                  value={carryOutAm}
-                  suffix="枚"
-                  onChange={(e) => setCarryOutAm(e.target.value)}
-                />
               </Card>
             </>
           )}

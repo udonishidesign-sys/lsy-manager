@@ -116,6 +116,7 @@ export default function ReportDetailPage() {
   const sales = (report.delivery_count ?? 0) * (report.unit_price ?? 0);
   const mileage = (report.odometer_end ?? 0) - (report.odometer_start ?? 0);
   const isShein = projectName === "SHEIN";
+  const isCSOSakaTech = projectName === "CS大阪テック";
 
   function DetailField({
     label,
@@ -167,7 +168,7 @@ export default function ReportDetailPage() {
           )}
         </Card>
 
-        {report.work_status !== "欠勤" && (
+        {report.work_status !== "欠勤" && !isShein && (
           <>
             {/* アルコールチェック */}
             <Card>
@@ -287,7 +288,10 @@ export default function ReportDetailPage() {
                 />
               </div>
             </Card>
-
+          </>
+        )}
+        {report.work_status !== "欠勤" && (
+          <>
             {/* 配送実績 */}
             <Card>
               <FormSection icon={<Package size={24} />} title="配送実績" />
@@ -296,16 +300,20 @@ export default function ReportDetailPage() {
                 value={`${report.delivery_count ?? 0}件`}
               />
 
-              {isShein && (
-                <DetailField
-                  label="不在持ち帰り件数"
-                  value={`${report.returned_delivery_count ?? 0}件`}
-                />
+              {!isShein && (
+                <>
+                  {!isCSOSakaTech && (
+                    <DetailField
+                      label="不在持ち帰り件数"
+                      value={`${report.returned_delivery_count ?? 0}件`}
+                    />
+                  )}
+                  <DetailField
+                    label="伝票枚数"
+                    value={`${report.carry_out_am ?? 0}枚`}
+                  />
+                </>
               )}
-              <DetailField
-                label="伝票枚数"
-                value={`${report.carry_out_am ?? 0}枚`}
-              />
             </Card>
           </>
         )}

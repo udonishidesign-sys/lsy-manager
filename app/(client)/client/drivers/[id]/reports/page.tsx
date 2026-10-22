@@ -443,13 +443,11 @@ export default function ClientDriverReportsPage() {
         <div className="bg-white border border-mist-200 rounded-xl overflow-hidden shadow-sm">
           {/* PCヘッダー */}
           <div className="hidden md:flex bg-mist-200 px-4 py-3">
-            <p className="font-semibold text-gray-600 w-1/4">日付</p>
+            <p className="font-semibold text-gray-600 w-1/3">日付</p>
 
-            <p className="font-semibold text-gray-600 w-1/4">配送数</p>
+            <p className="font-semibold text-gray-600 w-1/3">勤務区分</p>
 
-            <p className="font-semibold text-gray-600 w-1/4">勤務区分</p>
-
-            <p className="font-semibold text-gray-600 w-1/4">詳細</p>
+            <p className="font-semibold text-gray-600 w-1/3">詳細</p>
           </div>
 
           {/* =================================================
@@ -471,17 +469,13 @@ export default function ClientDriverReportsPage() {
                     PC
                 ================================================= */}
                 <div className="hidden md:flex items-center">
-                  <p className="text-gray-700 w-1/4">{report.report_date}</p>
+                  <p className="text-gray-700 w-1/3">{report.report_date}</p>
 
-                  <p className="text-gray-700 w-1/4">
-                    {report.delivery_count ?? 0}件
-                  </p>
-
-                  <p className="text-gray-700 w-1/4">
+                  <p className="text-gray-700 w-1/3">
                     {report.work_status || "-"}
                   </p>
 
-                  <div className="w-1/4">
+                  <div className="w-1/3">
                     <button
                       type="button"
                       onClick={() => handleDetail(report.id)}
@@ -501,14 +495,6 @@ export default function ClientDriverReportsPage() {
 
                     <span className="text-gray-700 font-medium">
                       {report.report_date}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-500">配送数</span>
-
-                    <span className="text-gray-700">
-                      {report.delivery_count ?? 0}件
                     </span>
                   </div>
 
