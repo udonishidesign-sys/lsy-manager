@@ -499,18 +499,13 @@ export default function ReportDetailPage() {
                         label="帰着場所（案件設定）"
                         value={report.end_location ?? "-"}
                       />
-                      <DetailField
-                        label="実際の業務開始地点"
-                        value={report.actual_start_location ?? "未入力"}
-                      />
-                      <DetailField
-                        label="実際の業務終了地点"
-                        value={report.actual_end_location ?? "未入力"}
-                      />
-                      <DetailField
-                        label="主な経過地点"
-                        value={report.main_transit_points ?? "未入力"}
-                      />
+                    </div>
+
+                    <DetailField
+                      label="主な経過地点"
+                      value={report.main_transit_points ?? "未入力"}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
                       <DetailField
                         label="出庫メーター"
                         value={`${report.odometer_start ?? 0}km`}
