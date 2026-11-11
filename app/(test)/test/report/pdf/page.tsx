@@ -232,20 +232,6 @@ export default function ReportPdfPreviewPage() {
       return;
     }
 
-    // スマホはクリック直後に空のタブを開いておく
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    const pdfWindow = isMobile ? window.open("about:blank", "_blank") : null;
-
-    if (isMobile && !pdfWindow) {
-      setError(
-        "PDFを開けませんでした。ポップアップを許可してから再度お試しください。",
-      );
-      return;
-    }
-
-    let objectUrl: string | null = null;
-
     try {
       setPdfGenerating(true);
       setError("");
@@ -269,96 +255,45 @@ export default function ReportPdfPreviewPage() {
       const blob = await pdf(pdfElement as any).toBlob();
 
       const safeDriverName =
-        driverName.replace(/[\\/:*?"<>|]/g, "_") || "ドライバー";
+        driverName.replace(/[\\/:*?"<>|]/g, "_").trim() || "ドライバー";
 
       const fileName = `運行日報_${date}_${safeDriverName}.pdf`;
 
-      // ファイル名を持つPDFファイルを作成
       const file = new File([blob], fileName, {
         type: "application/pdf",
       });
 
-      if (isMobile) {
-        // スマホ：ファイル共有に対応していれば共有メニューを使用
-        const canShareFile =
-          typeof navigator.share === "function" &&
-          typeof navigator.canShare === "function" &&
-          navigator.canShare({ files: [file] });
-
-        if (canShareFile) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: fileName,
-            });
-
-            // 共有完了
-            if (pdfWindow && !pdfWindow.closed) {
-              pdfWindow.close();
-            }
-
-            return;
-          } catch (shareError) {
-            // ユーザーが共有をキャンセルした場合は何もしない
-            if (
-              shareError instanceof DOMException &&
-              shareError.name === "AbortError"
-            ) {
-              if (pdfWindow && !pdfWindow.closed) {
-                pdfWindow.close();
-              }
-              return;
-            }
-
-            console.warn(
-              "PDF共有に失敗したため、ブラウザ表示に切り替えます。",
-              shareError,
-            );
-          }
-        }
-
-        // 共有非対応・共有失敗時はブラウザでPDFを表示
-        objectUrl = URL.createObjectURL(blob);
-
-        if (pdfWindow && !pdfWindow.closed) {
-          pdfWindow.location.href = objectUrl;
-        } else {
-          throw new Error("PDF表示用のウィンドウが閉じられました。");
-        }
-
-        // PDF表示中にURLを消さないよう、長めに保持
-        setTimeout(
-          () => {
-            if (objectUrl) {
-              URL.revokeObjectURL(objectUrl);
-            }
-          },
-          10 * 60 * 1000,
-        );
-      } else {
-        // PC：指定ファイル名でダウンロード
-        objectUrl = URL.createObjectURL(blob);
-
-        const link = window.document.createElement("a");
-        link.href = objectUrl;
-        link.download = fileName;
-
-        window.document.body.appendChild(link);
-        link.click();
-        window.document.body.removeChild(link);
-
-        setTimeout(() => {
-          if (objectUrl) {
-            URL.revokeObjectURL(objectUrl);
-          }
-        }, 60000);
+      // スマホ：共有メニューから保存
+      if (
+        typeof navigator.share === "function" &&
+        typeof navigator.canShare === "function" &&
+        navigator.canShare({ files: [file] })
+      ) {
+        await navigator.share({
+          files: [file],
+          title: fileName,
+        });
+        return;
       }
+
+      // 共有機能が使えない場合：通常のダウンロード
+      const url = URL.createObjectURL(blob);
+      const link = window.document.createElement("a");
+
+      link.href = url;
+      link.download = fileName;
+
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (e) {
-      console.error("PDF生成エラー:", e);
-
-      if (pdfWindow && !pdfWindow.closed) {
-        pdfWindow.close();
+      if (e instanceof Error && e.name === "AbortError") {
+        return;
       }
+
+      console.error("PDF生成エラー:", e);
 
       setError(
         "PDFの作成に失敗しました。フォントや写真の読み込みを確認してください。",
