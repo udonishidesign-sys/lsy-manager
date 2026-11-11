@@ -136,7 +136,7 @@ function DetailField({
 }) {
   return (
     <div>
-      <p className="text-xs text-mist-500 mb-1">{label}</p>
+      <p className="text-xs text-mist-500 mb-1">{label} </p>
       <p className="w-full min-h-12 rounded-lg bg-mist-100/50 px-4 py-3 text-mist-700 whitespace-pre-wrap break-words">
         {value}
       </p>
@@ -468,20 +468,6 @@ export default function ReportDetailPage() {
             </summary>
 
             <div className="border-t border-mist-200 mt-4 pt-4 space-y-5">
-              <section className="space-y-3">
-                <FormSection
-                  icon={<ClipboardPen size={22} />}
-                  title="勤務情報"
-                />
-                <DetailField label="出勤区分" value={report.work_status} />
-                {report.work_status === "欠勤" && (
-                  <DetailField
-                    label="欠勤理由"
-                    value={report.absence_reason ?? "-"}
-                  />
-                )}
-              </section>
-
               {report.work_status !== "欠勤" && !isShein && (
                 <>
                   <section className="space-y-3">
@@ -501,10 +487,6 @@ export default function ReportDetailPage() {
                       />
                     </div>
 
-                    <DetailField
-                      label="主な経過地点"
-                      value={report.main_transit_points ?? "未入力"}
-                    />
                     <div className="grid grid-cols-2 gap-3">
                       <DetailField
                         label="出庫メーター"
@@ -525,10 +507,17 @@ export default function ReportDetailPage() {
 
                   <section className="space-y-3">
                     <FormSection icon={<Clock size={22} />} title="勤務時間" />
-                    <DetailField
-                      label="業務開始時間"
-                      value={formatTime(report.start_time)}
-                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <DetailField
+                        label="業務開始時間"
+                        value={formatTime(report.start_time)}
+                      />
+                      <DetailField
+                        label="業務終了時間"
+                        value={formatTime(report.end_time)}
+                      />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3">
                       <DetailField
                         label="休憩開始"
@@ -539,17 +528,20 @@ export default function ReportDetailPage() {
                         value={formatTime(report.break_end)}
                       />
                     </div>
+                  </section>
+                  <section className="space-y-3">
+                    <FormSection
+                      icon={<Clock size={22} />}
+                      title="法定運行記録"
+                    />
+
                     <DetailField
-                      label="業務終了時間"
-                      value={formatTime(report.end_time)}
+                      label="主な経過地点"
+                      value={report.main_transit_points ?? "未入力"}
                     />
                     <DetailField
-                      label="休憩・睡眠の地点と日時"
+                      label="休憩の地点"
                       value={report.break_sleep_records ?? "未入力"}
-                    />
-                    <DetailField
-                      label="業務交替の地点・日時"
-                      value={report.driver_change_records ?? "該当なし／未入力"}
                     />
                   </section>
 
@@ -557,6 +549,7 @@ export default function ReportDetailPage() {
                     <FormSection
                       icon={<Clock size={22} />}
                       title="待機・荷役・附帯業務"
+                      required={false}
                     />
                     <DetailField
                       label="荷主都合による30分以上の待機"
@@ -578,7 +571,11 @@ export default function ReportDetailPage() {
 
               {report.work_status !== "欠勤" && (
                 <section className="space-y-3">
-                  <FormSection icon={<Package size={22} />} title="配送実績" />
+                  <FormSection
+                    icon={<Package size={22} />}
+                    title="配送実績"
+                    required={false}
+                  />
                   <DetailField
                     label="配達完了件数"
                     value={`${report.delivery_count ?? 0}件`}
