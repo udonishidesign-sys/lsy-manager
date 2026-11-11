@@ -271,7 +271,6 @@ export default function ReportPdfPreviewPage() {
       ) {
         await navigator.share({
           files: [file],
-          title: fileName,
         });
         return;
       }
