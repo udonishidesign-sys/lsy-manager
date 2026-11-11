@@ -64,6 +64,55 @@ function parseRecords(value: unknown): string[] {
   return [String(parsed)];
 }
 
+async function compressImageForPdf(src: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const image = new window.Image();
+
+    // Supabase画像をCanvasで扱えるようにする
+    image.crossOrigin = "anonymous";
+
+    image.onload = () => {
+      try {
+        const maxSize = 1200;
+
+        const scale = Math.min(
+          1,
+          maxSize / Math.max(image.naturalWidth, image.naturalHeight),
+        );
+
+        const canvas = document.createElement("canvas");
+
+        canvas.width = Math.round(image.naturalWidth * scale);
+        canvas.height = Math.round(image.naturalHeight * scale);
+
+        const context = canvas.getContext("2d");
+
+        if (!context) {
+          reject(new Error("画像を変換できませんでした。"));
+          return;
+        }
+
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        const compressed = canvas.toDataURL("image/jpeg", 0.75);
+
+        resolve(compressed);
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    image.onerror = () => {
+      reject(new Error("画像の読み込みに失敗しました。"));
+    };
+
+    image.src = src;
+  });
+}
+
 const inspectionItems = [
   ["check_brake", "ブレーキ"],
   ["check_tire", "タイヤ"],
@@ -241,14 +290,58 @@ export default function ReportPdfPreviewPage() {
         import("./ReportPdfDocument"),
       ]);
 
+      // 車両点検写真を圧縮
+      const compressedPhotoEntries = await Promise.all(
+        photoEntries.map(async ([label, url]) => {
+          if (!url) {
+            return [label, url] as [string, string | null | undefined];
+          }
+
+          try {
+            return [label, await compressImageForPdf(url)] as [
+              string,
+              string | null | undefined,
+            ];
+          } catch (error) {
+            console.warn(`写真の圧縮に失敗: ${label}`, error);
+            return [label, url] as [string, string | null | undefined];
+          }
+        }),
+      );
+
+      // アルコール・体温確認写真も圧縮
+      const compressedCheck = check
+        ? {
+            ...check,
+            alcohol_check_image_url: check.alcohol_check_image_url
+              ? await compressImageForPdf(check.alcohol_check_image_url).catch(
+                  (error) => {
+                    console.warn("アルコール写真の圧縮に失敗", error);
+                    return check.alcohol_check_image_url;
+                  },
+                )
+              : check.alcohol_check_image_url,
+
+            temperature_check_image_url: check.temperature_check_image_url
+              ? await compressImageForPdf(
+                  check.temperature_check_image_url,
+                ).catch((error) => {
+                  console.warn("体温写真の圧縮に失敗", error);
+                  return check.temperature_check_image_url;
+                })
+              : check.temperature_check_image_url,
+          }
+        : check;
+
+      // 圧縮した写真でPDFを生成
       const pdfElement = createElement(ReportPdfDocument, {
         date,
         driverName,
         projectName,
         report,
-        check,
+        check: compressedCheck,
         mileage,
-        photoEntries,
+        photoEntries: compressedPhotoEntries,
         complianceRecords,
       });
 
@@ -277,14 +370,14 @@ export default function ReportPdfPreviewPage() {
 
       // 共有機能が使えない場合：通常のダウンロード
       const url = URL.createObjectURL(blob);
-      const link = window.document.createElement("a");
+      const link = document.createElement("a");
 
       link.href = url;
       link.download = fileName;
 
-      window.document.body.appendChild(link);
+      document.body.appendChild(link);
       link.click();
-      window.document.body.removeChild(link);
+      document.body.removeChild(link);
 
       setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (e) {
