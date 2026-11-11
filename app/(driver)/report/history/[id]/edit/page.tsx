@@ -452,7 +452,11 @@ export default function ReportEditPage() {
         <div className="space-y-4">
           <PageTitle>日報入力</PageTitle>
           <Card>
-            <FormSection icon={<ClipboardPen size={24} />} title="勤務情報" />
+            <FormSection
+              icon={<ClipboardPen size={24} />}
+              title="勤務情報"
+              required={false}
+            />
             <div>
               <label className="block text-sm text-gray-500 mb-1">案件</label>
               <div className="rounded-lg text-gray-500 bg-slate-100 px-4 py-3 flex items-center">
@@ -541,6 +545,7 @@ export default function ReportEditPage() {
                   <FormSection
                     icon={<ClipboardPen size={24} />}
                     title="アルコールチェック"
+                    required={false}
                   />
                   <CustomTimeSelect
                     label="チェック時間"
@@ -716,7 +721,11 @@ export default function ReportEditPage() {
               {/* 走行情報 */}
               <Card>
                 <div className="space-y-3">
-                  <FormSection icon={<Van size={24} />} title="走行情報" />
+                  <FormSection
+                    icon={<Van size={24} />}
+                    title="走行情報"
+                    required={false}
+                  />
                   <div>
                     <label className="block text-sm text-gray-500 mb-1">
                       配送エリア
@@ -769,7 +778,11 @@ export default function ReportEditPage() {
 
               {/* 勤務時間 */}
               <Card>
-                <FormSection icon={<Clock size={24} />} title="勤務時間" />
+                <FormSection
+                  icon={<Clock size={24} />}
+                  title="勤務時間"
+                  required={false}
+                />
                 <div className="space-y-3">
                   <CustomTimeSelect
                     label="業務開始時間"
@@ -802,7 +815,11 @@ export default function ReportEditPage() {
             <>
               {/* 配送実績 */}
               <Card>
-                <FormSection icon={<Package size={24} />} title="配送実績" />
+                <FormSection
+                  icon={<Package size={24} />}
+                  title="配送実績"
+                  required={false}
+                />
 
                 <Input
                   label="配達完了件数"

@@ -6,4 +6,5 @@ const withPWA = require("next-pwa")({
 module.exports = withPWA({
   reactStrictMode: true,
   turbopack: {},
+  allowedDevOrigins: ["192.168.11.24"],
 });

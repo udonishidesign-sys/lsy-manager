@@ -152,7 +152,11 @@ export default function ReportDetailPage() {
         </div>
 
         <Card>
-          <FormSection icon={<ClipboardPen size={24} />} title="勤務情報" />
+          <FormSection
+            icon={<ClipboardPen size={24} />}
+            title="勤務情報"
+            required={false}
+          />
           <DetailField label="案件" value={projectName} />
           <DetailField
             label="車両ナンバー"
@@ -175,6 +179,7 @@ export default function ReportDetailPage() {
               <FormSection
                 icon={<ClipboardPen size={24} />}
                 title="アルコールチェック"
+                required={false}
               />
               <DetailField
                 label="チェック時間"
@@ -232,7 +237,11 @@ export default function ReportDetailPage() {
 
             {/* 走行情報 */}
             <Card>
-              <FormSection icon={<Van size={24} />} title="走行情報" />
+              <FormSection
+                icon={<Van size={24} />}
+                title="走行情報"
+                required={false}
+              />
               <DetailField
                 label="配送エリア"
                 value={report.delivery_area ?? "-"}
@@ -265,7 +274,11 @@ export default function ReportDetailPage() {
 
             {/* 勤務時間 */}
             <Card>
-              <FormSection icon={<Clock size={24} />} title="勤務時間" />
+              <FormSection
+                icon={<Clock size={24} />}
+                title="勤務時間"
+                required={false}
+              />
 
               <div className="space-y-3">
                 <DetailField
@@ -294,7 +307,11 @@ export default function ReportDetailPage() {
           <>
             {/* 配送実績 */}
             <Card>
-              <FormSection icon={<Package size={24} />} title="配送実績" />
+              <FormSection
+                icon={<Package size={24} />}
+                title="配送実績"
+                required={false}
+              />
               <DetailField
                 label="配達完了件数"
                 value={`${report.delivery_count ?? 0}件`}

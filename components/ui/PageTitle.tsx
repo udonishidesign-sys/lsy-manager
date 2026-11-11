@@ -3,5 +3,9 @@ type PageTitleProps = {
 };
 
 export default function PageTitle({ children }: PageTitleProps) {
-  return <h2 className="text-xl font-bold text-teal-600">{children}</h2>;
+  return (
+    <h2 className="text-xl font-bold text-mist-700 flex items-center justify-between">
+      {children}
+    </h2>
+  );
 }

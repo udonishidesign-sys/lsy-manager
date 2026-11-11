@@ -16,10 +16,9 @@ type Project = {
   created_at: string;
 };
 
-function formatYen(value: number) {
-  return `¥${value.toLocaleString()}`;
+function formatYen(value: number | null | undefined) {
+  return `¥${(value ?? 0).toLocaleString("ja-JP")}`;
 }
-
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
