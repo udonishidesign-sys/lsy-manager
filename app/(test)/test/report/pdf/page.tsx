@@ -232,12 +232,17 @@ export default function ReportPdfPreviewPage() {
       return;
     }
 
-    // スマートフォンかどうかを判定
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    // スマホは処理開始時に空のタブを開いておく
-    // （PDF生成後に開くとポップアップブロックされる場合があるため）
-    const pdfWindow = isMobile ? window.open("", "_blank") : null;
+    // スマホはクリック直後にPDF表示用のタブを開く
+    const pdfWindow = isMobile ? window.open("about:blank", "_blank") : null;
+
+    if (isMobile && !pdfWindow) {
+      setError(
+        "PDFを開けませんでした。ブラウザのポップアップ設定を確認してください。",
+      );
+      return;
+    }
 
     try {
       setPdfGenerating(true);
@@ -261,53 +266,18 @@ export default function ReportPdfPreviewPage() {
 
       const blob = await pdf(pdfElement as any).toBlob();
       const url = URL.createObjectURL(blob);
+
       const fileName = `運行日報_${date}_${driverName}.pdf`;
 
       if (isMobile) {
-        // スマホ：ファイル名を指定して共有・保存
-        const file = new File([blob], fileName, {
-          type: "application/pdf",
-        });
-
-        if (navigator.canShare?.({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: fileName,
-            });
-
-            if (pdfWindow && !pdfWindow.closed) {
-              pdfWindow.close();
-            }
-          } catch (shareError) {
-            if (
-              shareError instanceof DOMException &&
-              shareError.name === "AbortError"
-            ) {
-              if (pdfWindow && !pdfWindow.closed) {
-                pdfWindow.close();
-              }
-              return;
-            }
-            throw shareError;
-          }
+        // スマホ：新しいタブでPDFを表示
+        if (pdfWindow && !pdfWindow.closed) {
+          pdfWindow.location.href = url;
         } else {
-          // 共有機能が使えない場合の代替処理
-          const link = window.document.createElement("a");
-          link.href = url;
-          link.download = fileName;
-          window.document.body.appendChild(link);
-          link.click();
-          window.document.body.removeChild(link);
-
-          if (pdfWindow && !pdfWindow.closed) {
-            pdfWindow.close();
-          }
-
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          throw new Error("PDF表示用のウィンドウが閉じられました。");
         }
       } else {
-        // PC：ダウンロード
+        // PC：従来どおりダウンロード
         const link = window.document.createElement("a");
         link.href = url;
         link.download = fileName;
@@ -316,7 +286,7 @@ export default function ReportPdfPreviewPage() {
         link.click();
         window.document.body.removeChild(link);
 
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
       }
     } catch (e) {
       console.error("PDF生成エラー:", e);
