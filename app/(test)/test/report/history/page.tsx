@@ -8,6 +8,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import PageTitle from "@/components/ui/PageTitle";
 import AuthGuard from "@/components/AuthGuard";
 import Card from "@/components/ui/Card";
+import FieldStatus from "@/components/ui/FieldStatus";
 import {
   FileText,
   ChevronRight,
@@ -21,6 +22,7 @@ type Report = {
   driver_id: number;
   project_id: number;
   report_date: string;
+  submitted_at: string | null;
   delivery_count: number;
   delivery_area: string | null;
   unit_price: number;
@@ -184,9 +186,18 @@ export default function ReportHistoryPage() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-xs font-medium text-slate-500">
-                            {r.report_date}
-                          </p>
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="text-xs font-medium text-slate-500">
+                              {r.report_date}
+                            </p>
+                            <div className="flex items-center gap-1.5">
+                              {r.submitted_at ? (
+                                <FieldStatus status="submitted" />
+                              ) : (
+                                ""
+                              )}
+                            </div>
+                          </div>
                           <h2 className="mt-1 font-bold text-slate-900">
                             {projectName}
                           </h2>

@@ -1,11 +1,19 @@
-import { CheckCircle2, CircleAlert, Asterisk, Save, Clock } from "lucide-react";
+import {
+  CheckCircle2,
+  CircleAlert,
+  Asterisk,
+  Save,
+  Clock,
+  Send,
+} from "lucide-react";
 
 type FieldStatusType =
   | "complete"
   | "empty"
   | "required"
   | "saved"
-  | "inProgress";
+  | "inProgress"
+  | "submitted";
 
 type FieldStatusProps = {
   status: FieldStatusType;
@@ -37,6 +45,11 @@ const styles = {
     className: "bg-amber-50 text-amber-800 ring-amber-200",
     icon: Clock,
     label: "入力途中",
+  },
+  submitted: {
+    className: "bg-teal-50 text-teal-700 ring-teal-200",
+    icon: Send,
+    label: "提出済み",
   },
 };
 

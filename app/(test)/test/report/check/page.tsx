@@ -98,14 +98,12 @@ export default function DriverCheckPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
+  const [submittedAt, setSubmittedAt] = useState<string | null>(null);
   const [checks, setChecks] = useState<CheckValues>(emptyChecks);
-
   const [alcoholCheckTime, setAlcoholCheckTime] = useState("");
   const [alcoholCheckFile, setAlcoholCheckFile] = useState<File | null>(null);
   const [alcoholCheckPreview, setAlcoholCheckPreview] = useState("");
   const [alcoholCheckImageUrl, setAlcoholCheckImageUrl] = useState("");
-
   const [temperatureCheckValue, setTemperatureCheckValue] = useState("");
   const [temperatureCheckFile, setTemperatureCheckFile] = useState<File | null>(
     null,
@@ -133,7 +131,7 @@ export default function DriverCheckPage() {
     setLoading(true);
     setDraftReady(false);
     setLoadError("");
-
+    setSubmittedAt(null);
     const key = `vehicle-check:${id}:${reportDate}`;
 
     const restoreDraft = async () => {
@@ -209,7 +207,7 @@ export default function DriverCheckPage() {
     const { data, error } = await supabase
       .from("driver_vehicle_checks")
       .select(
-        "check_date, alcohol_check_time, alcohol_check_image_url, temperature_check_value, temperature_check_image_url, vehicle_photos, check_brake, check_tire, check_light, check_wiper, check_drive_recorder, check_engine, check_handle, check_horn, check_turn_signal, check_battery, check_emergency_signal, check_fuel, check_coolant, check_oil, check_license_plate, check_vehicle_inspection, check_insurance, check_mirror, check_headlight, check_hazard, check_cargo_area, check_load_condition",
+        "check_date, submitted_at, alcohol_check_time, alcohol_check_image_url, temperature_check_value, temperature_check_image_url, vehicle_photos, check_brake, check_tire, check_light, check_wiper, check_drive_recorder, check_engine, check_handle, check_horn, check_turn_signal, check_battery, check_emergency_signal, check_fuel, check_coolant, check_oil, check_license_plate, check_vehicle_inspection, check_insurance, check_mirror, check_headlight, check_hazard, check_cargo_area, check_load_condition",
       )
       .eq("driver_id", id)
       .eq("check_date", reportDate)
@@ -224,6 +222,7 @@ export default function DriverCheckPage() {
     }
 
     if (data) {
+      setSubmittedAt(data.submitted_at ?? null);
       // DBに保存済みのデータがある場合はDBを優先する。
       // 古いローカル下書きで上書きしない。
       setChecks(
@@ -459,7 +458,13 @@ export default function DriverCheckPage() {
 
   // 下書きの自動保存
   useEffect(() => {
-    if (!driverId || !draftReady || draftKey !== `${driverId}:${date}`) return;
+    if (
+      !driverId ||
+      !draftReady ||
+      submittedAt ||
+      draftKey !== `${driverId}:${date}`
+    )
+      return;
 
     if (skipNextDraftSave.current) {
       skipNextDraftSave.current = false;
@@ -497,6 +502,7 @@ export default function DriverCheckPage() {
     temperatureCheckImageUrl,
     photoFiles,
     photoUrls,
+    submittedAt,
   ]);
 
   const setCheck = (key: string, value: boolean) => {
@@ -512,6 +518,7 @@ export default function DriverCheckPage() {
     setPhotoPreviews((prev) => ({ ...prev, [key]: preview }));
   };
 
+  // 必須項目の確認
   // 必須項目の確認
   const validateRequiredFields = (): string[] => {
     const missing: string[] = [];
@@ -545,56 +552,24 @@ export default function DriverCheckPage() {
       }
     }
 
-    // 必須項目の確認
-    const validateRequiredFields = (): string[] => {
-      const missing: string[] = [];
+    // 車両写真は1枚以上必須
+    const hasVehiclePhoto = photoItems.some(
+      (item) => photoFiles[item.key] || photoUrls[item.key],
+    );
 
-      if (!alcoholCheckTime) {
-        missing.push("アルコールチェック時間");
-      }
-
-      if (!alcoholCheckFile && !alcoholCheckImageUrl) {
-        missing.push("アルコールチェック写真");
-      }
-
-      const temperature = Number(temperatureCheckValue);
-
-      if (
-        temperatureCheckValue.trim() === "" ||
-        !Number.isFinite(temperature) ||
-        temperature < 30 ||
-        temperature > 45
-      ) {
-        missing.push("体温（30〜45℃）");
-      }
-
-      if (!temperatureCheckFile && !temperatureCheckImageUrl) {
-        missing.push("体温チェック写真");
-      }
-
-      for (const item of checkItems) {
-        if (checks[item.key] !== true && checks[item.key] !== false) {
-          missing.push(item.label);
-        }
-      }
-
-      // 車両写真は1枚以上あればOK
-      const hasVehiclePhoto = photoItems.some(
-        (item) => photoFiles[item.key] || photoUrls[item.key],
-      );
-
-      if (!hasVehiclePhoto) {
-        missing.push("車両写真（いずれか1枚以上）");
-      }
-
-      return missing;
-    };
+    if (!hasVehiclePhoto) {
+      missing.push("車両写真（いずれか1枚以上）");
+    }
 
     return missing;
   };
 
   // 保存
   const save = async () => {
+    if (submittedAt) {
+      alert("この点検内容は提出済みのため、変更できません。");
+      return;
+    }
     if (!driverId) {
       alert("ドライバー情報を取得できません。再ログインしてください。");
       return;
@@ -745,7 +720,40 @@ export default function DriverCheckPage() {
       </main>
     );
   }
+  if (submittedAt) {
+    return (
+      <main className="mx-auto max-w-md p-4 pt-24">
+        <Card className="rounded-2xl border border-mist-200 shadow-sm">
+          <h1 className="text-lg font-bold text-mist-800">運行前点検</h1>
 
+          <div className="mt-4 rounded-lg bg-teal-50 p-4">
+            <p className="font-bold text-teal-700">
+              管理者への提出が完了しています
+            </p>
+            <p className="mt-2 text-sm text-mist-600">
+              この点検内容は提出済みのため、編集できません。
+            </p>
+          </div>
+
+          <div className="mt-4 space-y-2 text-sm text-mist-600">
+            <p>対象日：{date}</p>
+            <p>案件：{selectedProject?.name}</p>
+            <p>
+              提出日時：
+              {new Date(submittedAt).toLocaleString("ja-JP")}
+            </p>
+          </div>
+
+          <Button
+            className="mt-5 w-full"
+            onClick={() => router.push("/test/report")}
+          >
+            ホーム画面に戻る
+          </Button>
+        </Card>
+      </main>
+    );
+  }
   if (!canEdit) {
     return (
       <main className="mx-auto max-w-md p-4 pt-24">
@@ -1113,7 +1121,11 @@ export default function DriverCheckPage() {
         </Card>
 
         <div className="fixed bottom-16 left-0 right-0 z-50 mx-auto max-w-md bg-teal-50 p-4">
-          <Button className="w-full" onClick={save} disabled={saving}>
+          <Button
+            className="w-full"
+            onClick={save}
+            disabled={saving || Boolean(submittedAt)}
+          >
             {saving ? "保存中..." : "点検内容を保存"}
           </Button>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Button from "@/components/ui/Button";
@@ -9,10 +9,8 @@ import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import PageTitle from "@/components/ui/PageTitle";
 import CustomTimeSelect from "@/components/ui/CustomTimeSelect";
-import FieldStatus from "@/components/ui/FieldStatus";
 import { getDriverSessionId, setDriverSessionId } from "@/lib/driver-session";
 import { findDriverIdForUser } from "@/lib/driver-auth";
-
 import {
   deleteLocalDraft,
   getLocalDraft,
@@ -57,6 +55,12 @@ export default function ReportNewPage() {
   const [lastDeliveryPm, setLastDeliveryPm] = useState("");
   const [collectionCount, setCollectionCount] = useState("");
   const [saving, setSaving] = useState(false);
+  const [savedReportId, setSavedReportId] = useState<number | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveVersion, setSaveVersion] = useState(0);
+  const lastSavedSnapshot = useRef<string | null>(null);
+  const [submittedAt, setSubmittedAt] = useState<string | null>(null);
+  const [requiresVehicleCheck, setRequiresVehicleCheck] = useState(false);
   const [absenceReason, setAbsenceReason] = useState("");
   const [loading, setLoading] = useState(true);
   const [driverError, setDriverError] = useState("");
@@ -65,7 +69,6 @@ export default function ReportNewPage() {
   const [requestedProjectId, setRequestedProjectId] = useState<number | null>(
     null,
   );
-
   const [projectParamReady, setProjectParamReady] = useState(false);
   const [projectReady, setProjectReady] = useState(false);
   const [projectError, setProjectError] = useState("");
@@ -83,14 +86,12 @@ export default function ReportNewPage() {
         router.push("/login");
         return;
       }
-
       const savedDriverId = getDriverSessionId();
       if (!savedDriverId) {
         const { driverId } = await findDriverIdForUser({
           email: data.session.user.email,
           metadata: data.session.user.user_metadata,
         });
-
         if (driverId) {
           setDriverSessionId(driverId);
           setDriverId(driverId);
@@ -98,10 +99,8 @@ export default function ReportNewPage() {
       } else {
         setDriverId(Number(savedDriverId));
       }
-
       setLoading(false);
     };
-
     init();
   }, [router]);
 
@@ -212,7 +211,7 @@ export default function ReportNewPage() {
           supabase
             .from("projects")
             .select(
-              "id, name, current_unit_price, delivery_area, start_location, end_location",
+              "id, name, current_unit_price, delivery_area, start_location, end_location, requires_vehicle_check",
             )
             .eq("id", targetProjectId)
             .maybeSingle(),
@@ -231,6 +230,7 @@ export default function ReportNewPage() {
       setPlateNumber(driver?.plate_number ?? "");
       setProjectId(project.id);
       setProjectName(project.name);
+      setRequiresVehicleCheck(Boolean(project.requires_vehicle_check));
       setUnitPrice(String(project.current_unit_price ?? ""));
       setDeliveryArea(project.delivery_area ?? "");
       setStartLocation(project.start_location ?? "");
@@ -329,6 +329,8 @@ export default function ReportNewPage() {
       }
 
       if (!data) {
+        setSavedReportId(null);
+        setSubmittedAt(null);
         setDeliveryCount("");
         setReturnedDeliveryCount("");
         setWorkStatus("");
@@ -361,6 +363,8 @@ export default function ReportNewPage() {
       }
 
       console.log("保存済み日報:", data);
+      setSavedReportId(Number(data.id));
+      setSubmittedAt(data.submitted_at ?? null);
 
       // ホーム画面で選択された案件を使用する。
       // 保存済み日報の案件IDが異なる場合は、既存日報を別案件で上書きしない。
@@ -412,6 +416,11 @@ export default function ReportNewPage() {
       setWaitingRecords(data.waiting_records ?? "該当なし");
       setCargoHandlingRecords(data.cargo_handling_records ?? "該当なし");
       setIncidentRecords(data.incident_records ?? "該当なし");
+      if (data.submitted_at) {
+        setDraftReady(true);
+        return;
+      }
+
       await restoreDraft();
     };
 
@@ -419,7 +428,7 @@ export default function ReportNewPage() {
   }, [driverId, date, projectReady, projectId]);
 
   useEffect(() => {
-    if (!driverId || !draftReady || !date) return;
+    if (!driverId || !draftReady || !date || submittedAt) return;
     const key = `daily-report:${driverId}:${date}`;
     const draft = {
       projectId,
@@ -463,6 +472,7 @@ export default function ReportNewPage() {
     driverId,
     draftReady,
     date,
+    submittedAt,
     projectId,
     projectName,
     unitPrice,
@@ -501,7 +511,12 @@ export default function ReportNewPage() {
   // -----------------------------
   // 保存
   // -----------------------------
+
   const submit = async () => {
+    if (submittedAt) {
+      alert("提出済みの日報は編集できません。");
+      return;
+    }
     if (!driverId) return;
     if (!projectId) {
       alert("ホーム画面で案件を選択してください");
@@ -545,7 +560,6 @@ export default function ReportNewPage() {
         return;
       }
     }
-
     setSaving(true);
 
     const reportData = {
@@ -598,7 +612,7 @@ export default function ReportNewPage() {
 
     const { data: existing, error: checkError } = await supabase
       .from("daily_reports")
-      .select("id")
+      .select("id, submitted_at")
       .eq("driver_id", driverId)
       .eq("report_date", date)
       .maybeSingle();
@@ -608,9 +622,13 @@ export default function ReportNewPage() {
       setSaving(false);
       return;
     }
-    console.log("reportData", reportData);
-    console.log("driverId:", driverId);
-    console.log("date:", date);
+
+    if (existing?.submitted_at) {
+      setSubmittedAt(existing.submitted_at);
+      alert("この日報はすでに提出済みです。");
+      setSaving(false);
+      return;
+    }
 
     Object.entries(reportData).forEach(([key, value]) => {
       console.log(key, value, typeof value);
@@ -624,21 +642,31 @@ export default function ReportNewPage() {
       if (error) {
         console.log(error);
         alert(JSON.stringify(error, null, 2));
+        setSaving(false);
         return;
       }
 
+      // 更新した日報のIDを保持
+      setSavedReportId(Number(existing.id));
+      setSaveVersion((v) => v + 1);
+
       alert("日報を更新しました");
-      console.log("新規保存成功", reportData);
+      console.log("日報更新成功", reportData);
     } else {
-      const { error } = await supabase
+      const { data: inserted, error } = await supabase
         .from("daily_reports")
-        .insert([reportData]);
+        .insert([reportData])
+        .select("id")
+        .single();
 
       if (error) {
         alert(error.message);
         setSaving(false);
         return;
       }
+
+      setSavedReportId(Number(inserted.id));
+      setSaveVersion((v) => v + 1);
 
       alert("日報を保存しました");
       console.log("日報更新成功", reportData);
@@ -651,7 +679,68 @@ export default function ReportNewPage() {
     }
     setSaving(false);
   };
+  const submitToAdmin = async () => {
+    if (!savedReportId || !driverId) {
+      alert("先に日報を保存してください。");
+      return;
+    }
 
+    if (submittedAt) {
+      alert("この日報はすでに提出済みです。");
+      return;
+    }
+
+    // 車両点検が必要な案件は、点検データの保存を確認
+    if (requiresVehicleCheck) {
+      const { data: check, error: checkError } = await supabase
+        .from("driver_vehicle_checks")
+        .select("id")
+        .eq("driver_id", driverId)
+        .eq("check_date", date)
+        .maybeSingle();
+
+      if (checkError) {
+        alert(`車両点検データの確認に失敗しました：${checkError.message}`);
+        return;
+      }
+
+      if (!check) {
+        alert("車両点検がまだ保存されていません。点検画面で保存してください。");
+        return;
+      }
+    }
+
+    const confirmed = window.confirm(
+      "日報を管理者に提出しますか？\n提出後は編集できなくなります。",
+    );
+
+    if (!confirmed) return;
+
+    setSaving(true);
+
+    try {
+      const { error } = await supabase.rpc("submit_daily_report", {
+        p_report_id: savedReportId,
+      });
+
+      if (error) {
+        alert(`提出に失敗しました：${error.message}`);
+        return;
+      }
+
+      setSubmittedAt(new Date().toISOString());
+
+      try {
+        await deleteLocalDraft(`daily-report:${driverId}:${date}`);
+      } catch (error) {
+        console.warn("日報下書きの削除に失敗しました", error);
+      }
+
+      alert("管理者に日報を提出しました。");
+    } finally {
+      setSaving(false);
+    }
+  };
   const sales = Number(deliveryCount || 0) * Number(unitPrice || 0);
   const distance = Math.max(
     Number(odometerEnd || 0) - Number(odometerStart || 0),
@@ -659,6 +748,103 @@ export default function ReportNewPage() {
   );
   const isShein = projectName === "SHEIN";
   const isCSOSakaTech = projectName === "CS大阪テック";
+
+  const canSubmitReport =
+    !!savedReportId &&
+    !!driverId &&
+    !!projectId &&
+    !!workStatus &&
+    (workStatus !== "欠勤" || !!absenceReason) &&
+    (workStatus !== "出勤" ||
+      ((isShein || !!plateNumber.trim()) &&
+        (isShein || (odometerStart !== "" && odometerEnd !== "")) &&
+        (isShein || Number(odometerEnd) >= Number(odometerStart)) &&
+        (isShein || (!!startTime && !!endTime)) &&
+        (!(breakStart || breakEnd) || !!breakSleepRecords.trim()) &&
+        deliveryCount !== "")) &&
+    !submittedAt &&
+    !hasUnsavedChanges;
+  useEffect(() => {
+    if (!draftReady || !savedReportId || submittedAt) return;
+
+    const currentSnapshot = JSON.stringify([
+      projectId,
+      plateNumber,
+      deliveryCount,
+      returnedDeliveryCount,
+      deliveryArea,
+      workStatus,
+      absenceReason,
+      startTime,
+      endTime,
+      startLocation,
+      endLocation,
+      actualStartLocation,
+      actualEndLocation,
+      mainTransitPoints,
+      breakSleepRecords,
+      driverChangeRecords,
+      waitingRecords,
+      cargoHandlingRecords,
+      incidentRecords,
+      breakStart,
+      breakEnd,
+      lastDeliveryAm,
+      lastDeliveryPm,
+      odometerStart,
+      odometerEnd,
+      carryOutAm,
+      carryOutPm,
+      carryBackAm,
+      carryBackPm,
+      collectionCount,
+      note,
+    ]);
+
+    if (lastSavedSnapshot.current === null || saveVersion > 0) {
+      lastSavedSnapshot.current = currentSnapshot;
+      setHasUnsavedChanges(false);
+      return;
+    }
+
+    setHasUnsavedChanges(currentSnapshot !== lastSavedSnapshot.current);
+  }, [
+    draftReady,
+    savedReportId,
+    submittedAt,
+    projectId,
+    plateNumber,
+    deliveryCount,
+    returnedDeliveryCount,
+    deliveryArea,
+    workStatus,
+    absenceReason,
+    startTime,
+    endTime,
+    startLocation,
+    endLocation,
+    actualStartLocation,
+    actualEndLocation,
+    mainTransitPoints,
+    breakSleepRecords,
+    driverChangeRecords,
+    waitingRecords,
+    cargoHandlingRecords,
+    incidentRecords,
+    breakStart,
+    breakEnd,
+    lastDeliveryAm,
+    lastDeliveryPm,
+    odometerStart,
+    odometerEnd,
+    carryOutAm,
+    carryOutPm,
+    carryBackAm,
+    carryBackPm,
+    collectionCount,
+    note,
+    saveVersion,
+  ]);
 
   if (loading || (driverId !== null && !projectReady)) {
     return (
@@ -686,7 +872,42 @@ export default function ReportNewPage() {
       </main>
     );
   }
+  if (submittedAt) {
+    return (
+      <main className="min-h-screen px-4 pt-24">
+        <div className="mx-auto max-w-md rounded-lg border border-mist-200 bg-white p-5 shadow-md">
+          <PageTitle>運行日報</PageTitle>
 
+          <div className="mt-5 rounded-lg bg-teal-50 p-4">
+            <p className="font-bold text-teal-700">
+              管理者への提出が完了しています
+            </p>
+            <p className="mt-2 text-sm text-mist-600">
+              この日報は提出済みのため、編集できません。
+            </p>
+          </div>
+
+          <div className="mt-4 space-y-2 text-sm text-mist-600">
+            <p>対象日：{date}</p>
+            <p>案件：{projectName}</p>
+            <p>
+              提出日時：
+              {new Date(submittedAt).toLocaleString("ja-JP")}
+            </p>
+          </div>
+
+          <div className="mt-5">
+            <Button
+              className="w-full"
+              onClick={() => router.push("/test/report")}
+            >
+              ホーム画面に戻る
+            </Button>
+          </div>
+        </div>
+      </main>
+    );
+  }
   if (projectError) {
     return (
       <main className="mx-auto max-w-md p-4 pt-24">
@@ -1092,17 +1313,32 @@ export default function ReportNewPage() {
           </Card>
         )}
 
-        <div className="fixed bottom-16 left-0 right-0 z-50 mx-auto max-w-md p-4 bg-teal-50">
-          <Button
-            className="w-full"
-            onClick={() => {
-              console.log("ボタン押下");
-              submit();
-            }}
-            disabled={saving}
-          >
-            {saving ? "保存中..." : "保存する"}
-          </Button>
+        <div className="fixed mx-auto max-w-md bottom-16 left-0 right-0 z-40 border-t border-mist-200 bg-white p-4">
+          <div className="mx-auto max-w-md">
+            <div className="flex gap-3">
+              <Button
+                className="flex-1"
+                onClick={submit}
+                disabled={saving || Boolean(submittedAt)}
+              >
+                {saving ? "保存中..." : "保存する"}
+              </Button>
+
+              <Button
+                className="flex-1"
+                onClick={submitToAdmin}
+                disabled={saving || !canSubmitReport}
+              >
+                {saving ? "処理中..." : "管理者に提出する"}
+              </Button>
+            </div>
+
+            {!submittedAt && !canSubmitReport && (
+              <p className="mt-2 text-center text-xs text-slate-500">
+                日報を保存すると、管理者に提出できるようになります。
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </main>

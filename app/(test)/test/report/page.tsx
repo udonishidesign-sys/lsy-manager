@@ -23,7 +23,7 @@ type Project = {
   requires_vehicle_check: boolean;
 };
 
-type InputStatus = "empty" | "inProgress" | "saved";
+type InputStatus = "empty" | "inProgress" | "saved" | "submitted";
 
 type TodayState = {
   driverName: string;
@@ -185,7 +185,7 @@ export default function ReportHomePage() {
 
           supabase
             .from("daily_reports")
-            .select("id, project_id")
+            .select("id, project_id, submitted_at")
             .eq("driver_id", driverId)
             .eq("report_date", date)
             .is("deleted_at", null)
@@ -193,7 +193,7 @@ export default function ReportHomePage() {
 
           supabase
             .from("driver_vehicle_checks")
-            .select("check_date")
+            .select("check_date, submitted_at")
             .eq("driver_id", driverId)
             .eq("check_date", date)
             .maybeSingle(),
@@ -221,13 +221,17 @@ export default function ReportHomePage() {
 
       // 保存済みデータを優先してステータスを決定
       const reportStatus: InputStatus = reportResult.data
-        ? "saved"
+        ? reportResult.data.submitted_at
+          ? "submitted"
+          : "saved"
         : hasReportDraftInput(reportDraft)
           ? "inProgress"
           : "empty";
 
       const checkStatus: InputStatus = checkResult.data
-        ? "saved"
+        ? checkResult.data.submitted_at
+          ? "submitted"
+          : "saved"
         : hasCheckDraftInput(checkDraft)
           ? "inProgress"
           : "empty";
@@ -325,6 +329,11 @@ export default function ReportHomePage() {
   const canOpenReport =
     !!selectedProject &&
     (isShein || isCSOsakaTech || !requiresCheck || state.check || reportDone);
+  const allRecordsSaved = reportDone && (!requiresCheck || state.check);
+
+  const allRecordsSubmitted =
+    state.reportStatus === "submitted" &&
+    (!requiresCheck || state.checkStatus === "submitted");
 
   const reportUrl = selectedProject
     ? `/test/report/new?project_id=${selectedProject.id}`
@@ -531,6 +540,36 @@ export default function ReportHomePage() {
             )}
           </section>
 
+          {/* 記録状況メッセージ */}
+          {!state.loading && selectedProject && (
+            <>
+              {!allRecordsSaved && (
+                <div className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+                  <AlertCircle className="mt-0.5 shrink-0" size={19} />
+                  <div>
+                    <p className="text-sm font-bold">未完了の記録があります</p>
+                    <p className="mt-1 text-xs leading-5">
+                      保存状況を確認し、入力が必要な項目を完了してください。
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {allRecordsSaved && !allRecordsSubmitted && (
+                <div className="flex gap-3 rounded-xl border border-sky-200 bg-sky-50 p-4 text-sky-800">
+                  <FileText className="mt-0.5 shrink-0" size={19} />
+                  <div>
+                    <p className="text-sm font-bold">日報が未提出です</p>
+                    <p className="mt-1 text-xs leading-5">
+                      記録が全て保存されました。
+                      <br />
+                      内容を確認して問題なければ管理者に提出してください。
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
           {/* 履歴・PDF */}
           <section className="grid grid-cols-2 gap-3">
             <Link
@@ -561,23 +600,6 @@ export default function ReportHomePage() {
               </p>
             </Link>
           </section>
-
-          {/* 未完了メッセージ */}
-          {!state.loading &&
-            selectedProject &&
-            (!reportDone || (requiresCheck && !state.check)) && (
-              <div className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
-                <AlertCircle className="mt-0.5 shrink-0" size={19} />
-
-                <div>
-                  <p className="text-sm font-bold">未完了の記録があります</p>
-
-                  <p className="mt-1 text-xs leading-5">
-                    保存状況を確認し、入力が必要な項目を完了してください。
-                  </p>
-                </div>
-              </div>
-            )}
         </div>
       </main>
     </AuthGuard>
