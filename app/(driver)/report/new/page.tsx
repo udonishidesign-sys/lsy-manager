@@ -24,7 +24,9 @@ export default function ReportNewPage() {
   const [projectId, setProjectId] = useState<number | null>(null);
   const [projectName, setProjectName] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(
+    `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`,
+  );
   const [deliveryCount, setDeliveryCount] = useState("");
   const [deliveryArea, setDeliveryArea] = useState("");
   const [startLocation, setStartLocation] = useState("");
