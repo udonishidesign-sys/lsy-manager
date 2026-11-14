@@ -349,7 +349,7 @@ export default function ReportPdfPreviewPage() {
           throw new Error("ドライバー情報を取得できませんでした。");
         }
 
-        const storagePath = `${driverId}/${date}/${Date.now()}_${fileName}`;
+        const storagePath = `${driverId}/${date}/${Date.now()}_report.pdf`;
 
         const { error: uploadError } = await supabase.storage
           .from("amazon-reports")
