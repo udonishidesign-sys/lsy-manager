@@ -181,6 +181,7 @@ export default function ReportEditPage() {
   }, [id, router]);
 
   const submit = async () => {
+    console.log("submit実行");
     if (!workStatus) {
       alert("出勤区分を選択してください");
       return;
@@ -188,13 +189,11 @@ export default function ReportEditPage() {
 
     setSaving(true);
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("daily_reports")
       .update({
         report_date: reportDate,
-        driver_name: driverName,
         delivery_count: deliveryCount,
-        plate_number: plateNumber || null,
         delivery_area: deliveryArea || null,
         unit_price: unitPrice,
         work_status: workStatus,
@@ -236,8 +235,9 @@ export default function ReportEditPage() {
         check_insurance: checkInsurance,
         note,
       })
-      .eq("id", id);
-
+      .eq("id", id)
+      .select("id");
+    console.log("更新結果:", { data, error });
     setSaving(false);
 
     if (error) {

@@ -91,6 +91,6 @@ export function saveDrivers(drivers: Driver[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(drivers));
 }
 
-export function formatYen(amount: number): string {
-  return `¥${amount.toLocaleString("ja-JP")}`;
+export function formatYen(amount: number | null | undefined): string {
+  return `¥${(amount ?? 0).toLocaleString("ja-JP")}`;
 }

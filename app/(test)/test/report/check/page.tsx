@@ -56,17 +56,9 @@ const checkItems: CheckItem[] = [
 ];
 
 const photoItems = [
-  { key: "tire_front_left", label: "タイヤ左前" },
-  { key: "tire_front_right", label: "タイヤ右前" },
-  { key: "tire_rear_left", label: "タイヤ左後" },
-  { key: "tire_rear_right", label: "タイヤ右後" },
   { key: "vehicle_front", label: "車両前面" },
   { key: "vehicle_rear", label: "車両後面" },
-  { key: "vehicle_left", label: "車両左側面" },
-  { key: "vehicle_right", label: "車両右側面" },
-  { key: "cargo_area", label: "荷室" },
   { key: "vehicle_key", label: "鍵" },
-  { key: "abnormal_point", label: "異常箇所" },
 ] as const;
 
 type PhotoKey = (typeof photoItems)[number]["key"];

@@ -246,17 +246,9 @@ export default function ReportPdfPreviewPage() {
       ? Math.max(Number(report.odometer_end) - Number(report.odometer_start), 0)
       : null;
   const photoLabel: Record<string, string> = {
-    tire_front_left: "タイヤ左前",
-    tire_front_right: "タイヤ右前",
-    tire_rear_left: "タイヤ左後",
-    tire_rear_right: "タイヤ右後",
     vehicle_front: "車両前面",
     vehicle_rear: "車両後面",
-    vehicle_left: "車両左側面",
-    vehicle_right: "車両右側面",
-    cargo_area: "荷室",
     vehicle_key: "鍵",
-    abnormal_point: "異常箇所",
   };
   const photoEntries: Array<[string, string | null | undefined]> = [
     ...Object.entries(photoLabel).map(
@@ -351,7 +343,28 @@ export default function ReportPdfPreviewPage() {
         driverName.replace(/[\\/:*?"<>|]/g, "_").trim() || "ドライバー";
 
       const fileName = `運行日報_${date}_${safeDriverName}.pdf`;
+      // Amazon案件の場合は、PDFをSupabaseに保存
+      if (projectName === "Amazon") {
+        if (!driverId) {
+          throw new Error("ドライバー情報を取得できませんでした。");
+        }
 
+        const storagePath = `${driverId}/${date}/${Date.now()}_${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("amazon-reports")
+          .upload(storagePath, blob, {
+            contentType: "application/pdf",
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (uploadError) {
+          throw new Error(
+            `Amazon用PDFの保存に失敗しました：${uploadError.message}`,
+          );
+        }
+      }
       const file = new File([blob], fileName, {
         type: "application/pdf",
       });
@@ -387,9 +400,7 @@ export default function ReportPdfPreviewPage() {
 
       console.error("PDF生成エラー:", e);
 
-      setError(
-        "PDFの作成に失敗しました。フォントや写真の読み込みを確認してください。",
-      );
+      setError(e instanceof Error ? e.message : "PDFの作成に失敗しました。");
     } finally {
       setPdfGenerating(false);
     }
@@ -756,7 +767,7 @@ export default function ReportPdfPreviewPage() {
 
                   <div className="mt-4">
                     <PreviewSection title="車両点検項目" />
-                    <div className="grid grid-cols-4 border-l border-t border-mist-400 items-center">
+                    <div className="grid grid-cols-2 border-l border-t border-mist-400 items-center">
                       {inspectionItems.map(([key, label]) => {
                         const value = check?.[key];
                         const result =
@@ -781,7 +792,7 @@ export default function ReportPdfPreviewPage() {
 
                   <div className="mt-4">
                     <PreviewSection title="車両点検写真" />
-                    <div className="grid grid-cols-4 border-l border-t border-mist-400">
+                    <div className="grid grid-cols-3 border-l border-t border-mist-400">
                       {photoEntries.map(([label, url]) => (
                         <div
                           key={label}

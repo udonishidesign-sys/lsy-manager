@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     borderColor: C.mist400,
   },
   checkItem: {
-    width: "25%",
+    width: "50%",
     flexDirection: "row",
     alignItems: "stretch",
     borderRightWidth: 0.75,
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     borderColor: C.mist400,
   },
   photoItem: {
-    width: "25%",
+    width: "33.3333%",
     borderRightWidth: 0.75,
     borderBottomWidth: 0.75,
     borderColor: C.mist400,
