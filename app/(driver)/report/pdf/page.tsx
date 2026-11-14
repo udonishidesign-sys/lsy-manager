@@ -11,10 +11,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getDriverSessionId } from "@/lib/driver-session";
-import Card from "@/components/ui/Card";
 import AuthGuard from "@/components/AuthGuard";
 import PageTitle from "@/components/ui/PageTitle";
-import { ArrowLeft, CheckCircle2, CircleX, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 
 type Row = Record<string, any>;
 
@@ -158,6 +157,7 @@ export default function ReportPdfPreviewPage() {
   const [report, setReport] = useState<Row | null>(null);
   const [check, setCheck] = useState<Row | null>(null);
   const [projectName, setProjectName] = useState("");
+  const [requiresVehicleCheck, setRequiresVehicleCheck] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [previewScale, setPreviewScale] = useState(1);
@@ -198,6 +198,7 @@ export default function ReportPdfPreviewPage() {
     setReport(null);
     setCheck(null);
     setProjectName("");
+    setRequiresVehicleCheck(false);
     const [driverResult, reportResult, checkResult] = await Promise.all([
       supabase.from("drivers").select("name").eq("id", driverId).maybeSingle(),
       supabase
@@ -227,12 +228,15 @@ export default function ReportPdfPreviewPage() {
     if (reportData?.project_id) {
       const { data } = await supabase
         .from("projects")
-        .select("name")
+        .select("name, requires_vehicle_check")
         .eq("id", reportData.project_id)
         .maybeSingle();
+
       setProjectName(data?.name ?? "");
+      setRequiresVehicleCheck(Boolean(data?.requires_vehicle_check));
     } else {
       setProjectName("");
+      setRequiresVehicleCheck(false);
     }
     setLoading(false);
   }, [driverId, date]);
@@ -335,6 +339,7 @@ export default function ReportPdfPreviewPage() {
         mileage,
         photoEntries: compressedPhotoEntries,
         complianceRecords,
+        requiresVehicleCheck,
       });
 
       const blob = await pdf(pdfElement as any).toBlob();
@@ -695,7 +700,7 @@ export default function ReportPdfPreviewPage() {
             </article>
 
             {/* 2ページ目：点検・写真 */}
-            {projectName !== "SHEIN" && (
+            {requiresVehicleCheck && (
               <article
                 className="pdf-sheet relative mx-auto bg-white px-10 py-10 shadow-lg"
                 style={{

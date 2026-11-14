@@ -8,7 +8,13 @@ import DriverName from "@/components/ui/DriverName";
 import { supabase } from "@/lib/supabase";
 import { getDriverSessionId } from "@/lib/driver-session";
 
-import { House, ClipboardPen, Upload, History } from "lucide-react";
+import {
+  House,
+  ClipboardPen,
+  Upload,
+  History,
+  LayoutDashboard,
+} from "lucide-react";
 
 const menu = [
   {
@@ -41,7 +47,9 @@ export default function DriverLayout({
   const pathname = usePathname();
 
   const [driverName, setDriverName] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
+  // ドライバー名の取得
   useEffect(() => {
     const loadDriver = async () => {
       const id = getDriverSessionId();
@@ -63,6 +71,7 @@ export default function DriverLayout({
     };
 
     loadDriver();
+
     window.addEventListener("driver-session-updated", loadDriver);
 
     return () => {
@@ -70,16 +79,70 @@ export default function DriverLayout({
     };
   }, []);
 
+  // 管理者権限の確認
+  useEffect(() => {
+    let mounted = true;
+
+    const checkAdmin = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!mounted) return;
+
+      if (!session) {
+        setIsAdmin(false);
+        return;
+      }
+
+      const { data, error } = await supabase.rpc("is_admin");
+
+      if (!mounted) return;
+
+      if (error) {
+        console.error("管理者権限の確認エラー:", error);
+        setIsAdmin(false);
+        return;
+      }
+
+      setIsAdmin(!!data);
+    };
+
+    checkAdmin();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      checkAdmin();
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-100">
-      <header className="max-w-md mx-auto bg-white text-slate-600 px-4 pb-2 border-b border-slate-300 fixed w-full z-10 left-0 right-0">
-        <div className="max-w-md mx-auto flex items-center justify-between gap-4">
+      <header className="max-w-md mx-auto bg-white text-slate-600 px-4 py-1 border-b border-slate-300 fixed w-full z-10 left-0 right-0">
+        <div className="max-w-md mx-auto flex items-center justify-between gap-3">
           <div>
             <p className="text-xs">ドライバー用</p>
             <p className="font-bold text-lg">LSY 日報</p>
           </div>
 
-          <DriverName name={driverName} />
+          <div className="flex items-center gap-3">
+            {isAdmin && (
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-1.5 text-sm font-semibold text-white bg-teal-600 px-3 py-2 rounded-lg whitespace-nowrap"
+              >
+                管理画面へ
+              </Link>
+            )}
+
+            <DriverName name={driverName} />
+          </div>
         </div>
       </header>
 

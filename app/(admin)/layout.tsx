@@ -64,9 +64,18 @@ export default function AdminLayout({
     <AdminGuard>
       <div className="min-h-screen bg-slate-100">
         {/* SPヘッダー */}
-        <header className="lg:hidden bg-slate-700 text-white px-4 py-3 shadow">
-          <p className="text-xs text-slate-300">管理システム</p>
-          <p className="font-bold text-lg">LSY Manager</p>
+        <header className="lg:hidden bg-slate-700 text-white px-4 py-3 shadow flex items-center justify-between">
+          <div>
+            <p className="text-xs text-slate-300">管理システム</p>
+            <p className="font-bold text-lg">LSY Manager</p>
+          </div>
+
+          <Link
+            href="/report"
+            className="text-sm bg-white text-slate-700 px-3 py-2 rounded-lg font-semibold"
+          >
+            ドライバー画面
+          </Link>
         </header>
 
         <div className="flex">
@@ -113,9 +122,15 @@ export default function AdminLayout({
             <header className="hidden lg:flex bg-white border-b px-6 py-4 items-center justify-between">
               <div>
                 <p className="text-xs text-gray-400">管理者用</p>
-
                 <p className="font-semibold text-slate-700">LSY エルシステム</p>
               </div>
+
+              <Link
+                href="/report"
+                className="text-sm bg-teal-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-teal-700"
+              >
+                ドライバー画面へ
+              </Link>
             </header>
 
             {/* コンテンツ */}

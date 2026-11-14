@@ -19,6 +19,7 @@ type Props = {
   mileage: number | null;
   photoEntries: Array<[string, string | null | undefined]>;
   complianceRecords: [string, unknown][];
+  requiresVehicleCheck: boolean;
 };
 
 Font.register({
@@ -489,6 +490,7 @@ export default function ReportPdfDocument({
   mileage,
   photoEntries = [],
   complianceRecords = [],
+  requiresVehicleCheck,
 }: Props) {
   const isShein = projectName === "SHEIN";
 
@@ -647,7 +649,7 @@ export default function ReportPdfDocument({
       </Page>
 
       {/* 2ページ目：点検・写真（SHEIN以外） */}
-      {!isShein && (
+      {requiresVehicleCheck && (
         <Page size="A4" style={styles.page} wrap>
           <View style={styles.page2Header}>
             <Text style={styles.title}>運行前点検・確認記録</Text>

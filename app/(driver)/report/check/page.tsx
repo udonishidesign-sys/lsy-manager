@@ -746,7 +746,7 @@ export default function DriverCheckPage() {
 
           <Button
             className="mt-5 w-full"
-            onClick={() => router.push("/test/report")}
+            onClick={() => router.push("/report")}
           >
             ホーム画面に戻る
           </Button>
@@ -766,7 +766,7 @@ export default function DriverCheckPage() {
           </p>
           <Button
             className="mt-4 w-full"
-            onClick={() => router.push("/test/report")}
+            onClick={() => router.push("/report")}
           >
             ホーム画面に戻る
           </Button>
