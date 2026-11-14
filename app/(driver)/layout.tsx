@@ -41,6 +41,7 @@ export default function DriverLayout({
   const pathname = usePathname();
 
   const [driverName, setDriverName] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isShein, setIsShein] = useState(false);
   const [isCSOsakaTech, setIsCSOsakaTech] = useState(false);
   const [canOpenReport, setCanOpenReport] = useState(false);
@@ -50,6 +51,17 @@ export default function DriverLayout({
 
   useEffect(() => {
     const loadDriver = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session) {
+        const { data: adminResult, error } = await supabase.rpc("is_admin");
+        setIsAdmin(!error && adminResult === true);
+      } else {
+        setIsAdmin(false);
+      }
+
       const id = getDriverSessionId();
 
       if (!id) {
@@ -147,7 +159,7 @@ export default function DriverLayout({
 
   return (
     <div className="min-h-screen bg-mist-200">
-      <header className="no-print max-w-md mx-auto bg-white/95 backdrop-blur text-mist-700 px-4 pb-3 pt-2 border-b border-mist-200 fixed w-full z-10 left-0 right-0 shadow-sm">
+      <header className="no-print max-w-md mx-auto bg-white/95 backdrop-blur text-mist-700 px-4 pb-2 pt-2 border-b border-mist-200 fixed w-full z-10 left-0 right-0 shadow-sm">
         <div className="max-w-md mx-auto flex items-center justify-between gap-4">
           <div>
             <p className="text-[10px] font-semibold tracking-[0.18em] text-teal-600">
@@ -158,7 +170,17 @@ export default function DriverLayout({
             </p>
           </div>
 
-          <DriverName name={driverName} />
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Link
+                href="/dashboard"
+                className="rounded-lg bg-teal-600 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-100"
+              >
+                管理画面へ
+              </Link>
+            )}
+            <DriverName name={driverName} />
+          </div>
         </div>
       </header>
 
