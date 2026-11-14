@@ -14,6 +14,7 @@ import {
   Upload,
   History,
   LayoutDashboard,
+  ClipboardCheck,
 } from "lucide-react";
 
 const menu = [
@@ -23,14 +24,14 @@ const menu = [
     icon: House,
   },
   {
+    href: "/report/check",
+    label: "点検",
+    icon: ClipboardCheck,
+  },
+  {
     href: "/report/new",
     label: "日報",
     icon: ClipboardPen,
-  },
-  {
-    href: "/report/upload",
-    label: "ファイル",
-    icon: Upload,
   },
   {
     href: "/report/history",
